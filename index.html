@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación en Línea: Evolución del Trabajo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            user-select: none; /* Deshabilitar selección de texto */
+        }
+        
+        /* Animaciones suaves */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilo personalizado para scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Radio button personalizado */
+        .option-card input[type="radio"]:checked + div {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .option-card input[type="radio"]:checked + div .radio-circle {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+        }
+        .option-card input[type="radio"]:checked + div .radio-circle::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            margin: 3px auto;
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col" oncontextmenu="return false;">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-xl shadow-md">
+                    Ev
+                </div>
+                <h1 class="font-bold text-lg md:text-xl text-gray-800 hidden md:block">Plataforma de Evaluación</h1>
+            </div>
+            <div id="header-timer" class="hidden flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-mono text-lg font-semibold text-gray-700 border border-gray-200 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer-display">45:00</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container" class="flex-grow flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full">
+        <!-- El contenido dinámico se renderizará aquí -->
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="max-w-5xl mx-auto px-4 text-center text-sm text-gray-500">
+            &copy; 2026 Evaluación en Línea Seguro. Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <!-- Modal de Advertencia (Anti-Cheat) -->
+    <div id="warning-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
+            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Advertencia de Seguridad</h3>
+            <p class="text-gray-600 mb-6">
+                Ha salido de la pantalla de la evaluación (cambio de pestaña, minimizó el navegador o salió de pantalla completa). 
+                <br><br>
+                <strong class="text-red-600">Si vuelve a abandonar la pantalla, la evaluación será finalizada automáticamente.</strong>
+            </p>
+            <button onclick="resumeExam()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                Entendido, regresar a la evaluación
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Envío -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">¿Enviar evaluación?</h3>
+            <p class="text-gray-600 mb-6">
+                Estás a punto de enviar tus respuestas. Una vez enviado, no podrás hacer cambios ni reiniciar la prueba.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="submitExam(false)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                    Sí, enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos crudos de estudiantes
+        const RAW_STUDENTS = [
+            "2024320123 AGUILAR HERNANDEZ ANA HELENA",
+            "2023320806 ANZURES ZAMORA JOSE MIGUEL",
+            "2022321341 AVILA TABOADA DANIEL",
+            "2021320237 CASTILLO ROMERO ALAN",
+            "2020320111 DIAZ AGUILAR VALERIA",
+            "2022320812 ESPIDIO GUADARRAMA JOSE ALBERTO",
+            "2024320129 ESPINOSA MARTINEZ ESTHER CAROLINA",
+            "2023320126 FLORES VALDEZ RASCHELLE",
+            "2024320089 GOMEZ MENDEZ MARIA FERNANDA",
+            "2022320262 HERNANDEZ VILLEGAS KARLA VANESSA",
+            "2023320301 LARA AMARO ISRAEL",
+            "2023320233 MALDONADO SALAS YAEL ORLANDO",
+            "2023320344 MARTINEZ MENDOZA MICHEL YANETH",
+            "2022320668 MENDOZA MARTINEZ MELANY",
+            "2023320285 MILLAN ENCISO ANELIZ XIMENA",
+            "2022321058 ORNELAS VALENCIA DHARANA",
+            "2022320690 PEÑALOZA LOPEZ JACQUELINE AIMEE",
+            "2024320407 PORTILLO VALENCIA URIEL EMMANUEL",
+            "2021320515 RAMIREZ AGUSTIN JOSE LUIS",
+            "2022320500 REYES NUÑEZ ZAIRA VANESSA",
+            "2022320553 RUIZ SANTIESTEBAN XIMENA",
+            "2022320855 SANCHEZ HERNANDEZ AILYN GUADALUPE",
+            "2023321289 SOL VEGA DANIELA ITZEL",
+            "2023320390 TAVARES MORALES JAIRO",
+            "2023320789 TENIZA PEREZ CANDY SARAI",
+            "2021321230 URBINA MARTINEZ EDUARDO",
+            "2020321212 VARELA MARQUEZ SAMANTHA",
+            "2023320708 VELAZQUEZ RIVAS ANGEL DAVID"
+        ];
+
+        // Procesar lista a formato de objetos { id: boleta, name: nombre }
+        const STUDENTS = RAW_STUDENTS.map(row => {
+            const parts = row.split(' ');
+            const id = parts[0];
+            const name = parts.slice(1).join(' ');
+            return { id, name };
+        });
+
+        // Banco de preguntas (30 preguntas)
+        const QUESTIONS = [
+            {
+                id: 1,
+                text: "¿Qué evento histórico en la década de 1820 se destaca como la primera gran sacudida en la transición del trabajo artesanal al sistema de fábricas en Lowell, Massachusetts?",
+                options: [
+                    { id: "A", text: "La invención de la máquina de vapor de Watt." },
+                    { id: "B", text: "La llegada de 5,000 trabajadores a fábricas de algodón estrictamente reguladas por el reloj." },
+                    { id: "C", text: "La creación del primer telar automatizado en Inglaterra." },
+                    { id: "D", text: "La promulgación de leyes laborales agrícolas." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 2,
+                text: "Según la Teoría X descrita por Douglas McGregor, ¿cuál era la premisa central sobre la motivación laboral en el siglo XIX?",
+                options: [
+                    { id: "A", text: "Los trabajadores buscan autonomía y satisfacción personal de forma natural." },
+                    { id: "B", text: "La motivación depende de la ergonomía del espacio de trabajo." },
+                    { id: "C", text: "Los humanos odian trabajar por naturaleza y solo se mueven por miedo o supervivencia." },
+                    { id: "D", text: "El trabajo intelectual reemplaza completamente al esfuerzo físico." }
+                ],
+                correct: "C"
+            },
+            {
+                id: 3,
+                text: "¿Qué término utiliza el Pew Research Center para describir la presión sentida por el 64% de los trabajadores al percibir que la tecnología borra los límites entre la vida personal y laboral?",
+                options: [
+                    { id: "A", text: "Alienación física." },
+                    { id: "B", text: "Tecnoestrés." },
+                    { id: "C", text: "Gestión algorítmica." },
+                    { id: "D", text: "Paradoja del rendimiento." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 4,
+                text: "En el modelo psicológico de Hackman y Oldham sobre la motivación laboral, ¿cuántos elementos críticos se señalan?",
+                options: [
+                    { id: "A", text: "Tres elementos." },
+                    { id: "B", text: "Cinco elementos críticos." },
+                    { id: "C", text: "Siete elementos." },
+                    { id: "D", text: "Diez elementos." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 5,
+                text: "En la cuarta revolución industrial, ¿cuál es el principio clave respecto a la relación entre la inteligencia artificial y el trabajador humano?",
+                options: [
+                    { id: "A", text: "Reemplazar gradualmente al humano en la toma de decisiones clave." },
+                    { id: "B", text: "Mantener siempre al humano en el circuito de control como amplificador de la mente." },
+                    { id: "C", text: "Automatizar por completo el trabajo creativo y estratégico." },
+                    { id: "D", text: "Eliminar la supervisión humana en los entornos corporativos." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 6,
+                text: "¿En qué instalaciones y año comenzó el experimento sobre iluminación liderado por Elton Mayo?",
+                options: [
+                    { id: "A", text: "General Motors en 1959." },
+                    { id: "B", text: "Western Electric Company en Hawthorne en 1927." },
+                    { id: "C", text: "Stanford University en 1932." },
+                    { id: "D", text: "Harvard Business School en 1914." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 7,
+                text: "¿Qué resultado desconcertante ocurrió con la productividad cuando los investigadores redujeron la iluminación al mínimo en el grupo experimental?",
+                options: [
+                    { id: "A", text: "La producción colapsó de inmediato." },
+                    { id: "B", text: "La producción se mantuvo sin ningún cambio." },
+                    { id: "C", text: "La producción siguió subiendo de manera inesperada." },
+                    { id: "D", text: "Los trabajadores abandonaron la fábrica." }
+                ],
+                correct: "C"
+            },
+            {
+                id: 8,
+                text: "¿Cómo se define el concepto psicológico de 'reactividad' identificado durante el Experimento Hawthorne?",
+                options: [
+                    { id: "A", text: "La tendencia a rechazar los cambios tecnológicos." },
+                    { id: "B", text: "La inclinación involuntaria a cambiar o mejorar el comportamiento al sentirse observado y valorado." },
+                    { id: "C", text: "La resistencia biológica a trabajar en turnos nocturnos." },
+                    { id: "D", text: "La respuesta física a los cambios de temperatura ambiental." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 9,
+                text: "Según Elton Mayo, ¿qué impacto tiene la especialización extrema y la monotonía en el trabajador?",
+                options: [
+                    { id: "A", text: "Constituye la cumbre absoluta de la eficiencia sostenible." },
+                    { id: "B", text: "Apaga el espíritu humano y aniquila la motivación interna." },
+                    { id: "C", text: "Incrementa la estabilidad psicológica a largo plazo." },
+                    { id: "D", text: "Previene la aparición del agotamiento laboral." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 10,
+                text: "¿Qué factor demostró ser mucho más potente y eficaz para motivar a los empleados que imponer reglas transaccionales?",
+                options: [
+                    { id: "A", text: "El incremento constante de incentivos económicos aislados." },
+                    { id: "B", text: "La confianza y validación de la gerencia." },
+                    { id: "C", text: "La reducción de los tiempos de descanso." },
+                    { id: "D", text: "La rotación obligatoria de puestos de trabajo." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 11,
+                text: "En la filosofía de Aristóteles, ¿cómo se posicionaba el trabajo manual dentro de la pirámide de la 'eudaimonía'?",
+                options: [
+                    { id: "A", text: "Como la forma suprema de virtud moral." },
+                    { id: "B", text: "Como un medio utilitario y necesidad básica de supervivencia, desconectado del verdadero florecimiento humano." },
+                    { id: "C", text: "Como el único camino para la contemplación filosófica." },
+                    { id: "D", text: "Como un deber cívico para la aristocracia." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 12,
+                text: "Según la ética deontológica de Kant aplicada a las organizaciones, ¿cuál es el principio para tratar a los colaboradores?",
+                options: [
+                    { id: "A", text: "Utilizarlos como instrumentos para elevar la productividad general." },
+                    { id: "B", text: "Tratarlos siempre como fines en sí mismos, respetando su dignidad incondicional y nunca como meros instrumentos." },
+                    { id: "C", text: "Priorizar las metas financieras de la empresa por encima del individuo." },
+                    { id: "D", text: "Medir su valor únicamente a través de evaluaciones de desempeño." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 13,
+                text: "¿Qué es la 'paradoja del rendimiento' en la cultura corporativa moderna?",
+                options: [
+                    { id: "A", text: "La mejora de la eficiencia mediante descansos estructurados." },
+                    { id: "B", text: "La destrucción de la autenticidad al convertir la motivación intrínseca en una meta forzada evaluada anualmente." },
+                    { id: "C", text: "El equilibrio entre facturación económica y salud mental." },
+                    { id: "D", text: "La reducción de errores operativos por automatización." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 14,
+                text: "¿Cuáles son las dos condiciones necesarias para que un trabajo tenga verdadero sentido normativo y ético?",
+                options: [
+                    { id: "A", text: "Un salario elevado y prestigio corporativo." },
+                    { id: "B", text: "Que guste subjetivamente al trabajador y genere un impacto positivo real en la sociedad (componente objetivo)." },
+                    { id: "C", text: "Horarios flexibles y ausencia de supervisión." },
+                    { id: "D", text: "Incentivos individuales y estabilidad financiera." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 15,
+                text: "Según Max Weber, ¿qué acontecimiento histórico transformó el trabajo en un deber moral y vocación?",
+                options: [
+                    { id: "A", text: "La Revolución Francesa." },
+                    { id: "B", text: "La Reforma Protestante." },
+                    { id: "C", text: "La creación de las primeras universidades." },
+                    { id: "D", text: "El desarrollo de la imprenta." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 16,
+                text: "¿Qué premisa define el concepto de la 'mano invisible' de Adam Smith?",
+                options: [
+                    { id: "A", text: "La intervención directa del Estado para regular la oferta y la demanda." },
+                    { id: "B", text: "La idea de que la búsqueda del beneficio económico individual contribuye de forma natural al bienestar general." },
+                    { id: "C", text: "La redistribución obligatoria de utilidades entre la fuerza laboral." },
+                    { id: "D", text: "La eliminación de los mercados financieros internacionales." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 17,
+                text: "En la teoría marxista, ¿cómo se define matemáticamente la 'plusvalía'?",
+                options: [
+                    { id: "A", text: "El costo de mantenimiento de las instalaciones industriales." },
+                    { id: "B", text: "La diferencia entre el valor real que produce el trabajador y el salario que termina recibiendo." },
+                    { id: "C", text: "El impuesto cobrado por el Estado a las empresas." },
+                    { id: "D", text: "El margen de pérdida por obsolescencia tecnológica." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 18,
+                text: "Según Karl Marx, ¿cuáles son tres contradicciones o fricciones internas del sistema capitalista?",
+                options: [
+                    { id: "A", text: "La falta de innovación, el exceso de regulación y la deflación." },
+                    { id: "B", text: "La alienación, las crisis de sobreproducción y la concentración monopolista." },
+                    { id: "C", text: "El pleno empleo, la igualdad salarial y el estancamiento tecnológico." },
+                    { id: "D", text: "La escasez de materias primas, las huelgas agrarias y los altos impuestos." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 19,
+                text: "¿Qué caracteriza al 'paradigma del monopolio transnacional' del siglo XXI?",
+                options: [
+                    { id: "A", text: "El retorno a mercados locales artesanales." },
+                    { id: "B", text: "Una red financiera global donde el capital supera fronteras nacionales y genera ganancias mediante especulación." },
+                    { id: "C", text: "La centralización absoluta de la producción en el Estado." },
+                    { id: "D", text: "La desaparición de la banca internacional." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 20,
+                text: "En el materialismo histórico, ¿cuál es el motor que impulsa el avance de la historia?",
+                options: [
+                    { id: "A", text: "El comercio internacional." },
+                    { id: "B", text: "La lucha de clases." },
+                    { id: "C", text: "El desarrollo de nuevas tecnologías de comunicación." },
+                    { id: "D", text: "La acumulación de reservas monetarias." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 21,
+                text: "¿Hace cuántos años y en qué región comenzó históricamente la práctica estructurada de la esclavitud?",
+                options: [
+                    { id: "A", text: "Hace 2,000 años en el Imperio Romano." },
+                    { id: "B", text: "Hace unos 5,000 años en Mesopotamia y Egipto." },
+                    { id: "C", text: "Hace 1,000 años en la Europa medieval." },
+                    { id: "D", text: "Hace 500 años en las colonias americanas." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 22,
+                text: "En la Atenas clásica, ¿qué porcentaje aproximado de la población estaba constituido por personas esclavizadas?",
+                options: [
+                    { id: "A", text: "Un 10%." },
+                    { id: "B", text: "Un 25%." },
+                    { id: "C", text: "Un 50%." },
+                    { id: "D", text: "Un 75%." }
+                ],
+                correct: "D"
+            },
+            {
+                id: 23,
+                text: "Según datos de la Organización Internacional del Trabajo (OIT), ¿cuántas personas están atrapadas en alguna forma de esclavitud moderna actualmente?",
+                options: [
+                    { id: "A", text: "10 millones de personas." },
+                    { id: "B", text: "25 millones de personas." },
+                    { id: "C", text: "50 millones de personas." },
+                    { id: "D", text: "100 millones de personas." }
+                ],
+                correct: "C"
+            },
+            {
+                id: 24,
+                text: "De las víctimas globales de esclavitud moderna, ¿cuántas corresponden a trabajos forzados y cuántas a matrimonios forzados?",
+                options: [
+                    { id: "A", text: "28 millones en trabajos forzados y 22 millones en matrimonios forzados." },
+                    { id: "B", text: "40 millones en trabajos forzados y 10 millones en matrimonios forzados." },
+                    { id: "C", text: "15 millones en trabajos forzados y 35 millones en matrimonios forzados." },
+                    { id: "D", text: "25 millones en trabajos forzados y 25 millones en matrimonios forzados." }
+                ],
+                correct: "A"
+            },
+            {
+                id: 25,
+                text: "¿Qué aumento en la detección de víctimas de trata a nivel mundial se ha registrado tras conflictos e inestabilidades geopolíticas recientes como la guerra en Ucrania?",
+                options: [
+                    { id: "A", text: "Un 10%." },
+                    { id: "B", text: "Un 25%." },
+                    { id: "C", text: "Un 40%." },
+                    { id: "D", text: "Un 50%." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 26,
+                text: "Según la teoría de los dos factores de Frederick Herzberg, ¿cuál es el papel de los 'factores higiénicos' (como el salario base o la seguridad física)?",
+                options: [
+                    { id: "A", text: "Elevar el rendimiento a niveles superiores." },
+                    { id: "B", text: "Evitar que la máquina colapse por la fricción y prevenir la insatisfacción." },
+                    { id: "C", text: "Fomentar el entusiasmo creativo espontáneo." },
+                    { id: "D", text: "Sustituir la necesidad de un liderazgo cercano." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 27,
+                text: "En un estudio realizado en una empresa de ingeniería, ¿qué coeficientes confirmaron la correlación entre el clima organizacional y el desempeño?",
+                options: [
+                    { id: "A", text: "Pruebas T de Student y Anova." },
+                    { id: "B", text: "Coeficientes de correlación de Pearson y Spearman." },
+                    { id: "C", text: "Análisis de regresión logística." },
+                    { id: "D", text: "Varianza y desviación estándar." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 28,
+                text: "En un caso real de la industria manufacturera en Ciudad Juárez (ensamble de kit en 50 minutos), ¿qué ocurrió en los puestos sin ergonomía?",
+                options: [
+                    { id: "A", text: "Los operarios aumentaron su velocidad para compensar las molestias." },
+                    { id: "B", text: "Los tiempos de ensamble se volvieron erráticos y se fracasaba en la meta de 50 minutos." },
+                    { id: "C", text: "La fatiga física no tuvo ningún impacto en el rendimiento." },
+                    { id: "D", text: "Los errores de calidad disminuyeron." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 29,
+                text: "¿Cuáles son los cuatro estilos de liderazgo formulados por Rensis Likert?",
+                options: [
+                    { id: "A", text: "Autoritario, Democrático, Laissez-faire y Burocrático." },
+                    { id: "B", text: "Coercitivamente centralista, Benevolente, Consultivo y Participativo." },
+                    { id: "C", text: "Transaccional, Transformacional, Pasivo y Directivo." },
+                    { id: "D", text: "Técnico, Administrativo, Emocional y Operativo." }
+                ],
+                correct: "B"
+            },
+            {
+                id: 30,
+                text: "Según las proyecciones laborales para 2026, ¿qué busca el talento actual además de la compensación económica?",
+                options: [
+                    { id: "A", text: "Supervisión digital constante e incentivos individuales." },
+                    { id: "B", text: "Sentido, equilibrio, coherencia y espacios donde prosperar sin sacrificar su salud física o mental." },
+                    { id: "C", text: "Extensión de la jornada laboral a cambio de bonificaciones." },
+                    { id: "D", text: "Un entorno estrictamente competitivo y jerárquico." }
+                ],
+                correct: "B"
+            }
+        ];
+
+        const STORAGE_KEY = 'evaluacion_estado_v1';
+        const EXAM_DURATION_SECONDS = 45 * 60; // 45 minutos
+
+        let state = {
+            status: 'start', // 'start', 'playing', 'finished'
+            studentName: '',
+            currentQuestion: 0,
+            answers: {},
+            warnings: 0,
+            timeRemaining: EXAM_DURATION_SECONDS,
+            terminationReason: null // null, 'timeout', 'cheat'
+        };
+
+        let timerInterval = null;
+
+        // Cargar estado de localStorage
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+
+        // Guardar estado en localStorage
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        // Bloquear copiar/pegar
+        document.addEventListener('copy', (e) => e.preventDefault());
+        document.addEventListener('paste', (e) => e.preventDefault());
+        document.addEventListener('cut', (e) => e.preventDefault());
+
+        // Monitoreo Anti-Cheat
+        function handleVisibilityChange() {
+            if (document.hidden && state.status === 'playing') {
+                registerCheatWarning();
+            }
+        }
+
+        function handleWindowBlur() {
+            if (state.status === 'playing') {
+                registerCheatWarning();
+            }
+        }
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && state.status === 'playing') {
+                registerCheatWarning();
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleWindowBlur);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+        function registerCheatWarning() {
+            // Prevenir múltiples alertas concurrentes si ya se está mostrando el modal
+            if(document.getElementById('warning-modal').classList.contains('hidden') === false) return;
+
+            state.warnings += 1;
+            saveState();
+
+            if (state.warnings === 1) {
+                document.getElementById('warning-modal').classList.remove('hidden');
+            } else if (state.warnings >= 2) {
+                state.terminationReason = 'cheat';
+                submitExam(true); // Enviar forzosamente
+            }
+        }
+
+        async function resumeExam() {
+            document.getElementById('warning-modal').classList.add('hidden');
+            try {
+                if (!document.fullscreenElement) {
+                    await document.documentElement.requestFullscreen();
+                }
+            } catch (err) {
+                console.warn('No se pudo reanudar pantalla completa automáticamente.');
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            document.getElementById('header-timer').classList.remove('hidden');
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+                saveState();
+
+                if (state.timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    state.terminationReason = 'timeout';
+                    submitExam(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(state.timeRemaining / 60);
+            const seconds = state.timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('timer-display').textContent = display;
+            
+            // Cambiar a rojo si quedan menos de 5 minutos
+            if(state.timeRemaining < 300) {
+                document.getElementById('header-timer').classList.add('text-red-600', 'bg-red-50', 'border-red-200');
+                document.getElementById('header-timer').classList.remove('text-gray-700', 'bg-gray-100', 'border-gray-200');
+            }
+        }
+
+        function render() {
+            const container = document.getElementById('app-container');
+            container.innerHTML = '';
+
+            if (state.status === 'start') {
+                container.appendChild(createStartScreen());
+            } else if (state.status === 'playing') {
+                container.appendChild(createQuizScreen());
+                if(!timerInterval) startTimer();
+            } else if (state.status === 'finished') {
+                document.getElementById('header-timer').classList.add('hidden');
+                if(timerInterval) clearInterval(timerInterval);
+                container.appendChild(createResultScreen());
+            }
+        }
+
+        function createStartScreen() {
+            const div = document.createElement('div');
+            div.className = 'w-full max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-gray-100';
+            
+            let optionsHTML = '<option value="" disabled selected>Seleccione su nombre...</option>';
+            // Llenar el select SÓLO con los nombres (usando el ID oculto en el value)
+            STUDENTS.forEach(student => {
+                optionsHTML += `<option value="${student.id}">${student.name}</option>`;
+            });
+
+            div.innerHTML = `
+                <div class="bg-blue-600 p-8 text-white text-center">
+                    <h2 class="text-3xl font-bold mb-2">Evaluación Institucional</h2>
+                    <p class="text-blue-100">Tema: Evolución del Trabajo y Transformación Tecnológica</p>
+                </div>
+                <div class="p-8">
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Instrucciones Generales
+                        </h3>
+                        <ul class="text-gray-600 space-y-2 text-sm ml-7 list-disc">
+                            <li>La evaluación consta de <strong>30 preguntas</strong> de opción múltiple.</li>
+                            <li>Tienes <strong>45 minutos</strong> para completarla.</li>
+                            <li><strong>Seguridad:</strong> Se activará el modo de pantalla completa. Si sales de la pantalla, minimizas o cambias de pestaña, recibirás una advertencia. <strong class="text-red-500">A la segunda advertencia, el examen se enviará y cerrará automáticamente.</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Estudiante</label>
+                        <select id="student-select" class="w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-50 border cursor-pointer outline-none transition-colors" onchange="checkStartButton()">
+                            ${optionsHTML}
+                        </select>
+                    </div>
+
+                    <div class="mb-8 relative">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Boleta</label>
+                        <input type="text" id="student-id-input" placeholder="Ingrese su número de boleta para validar" class="w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-50 border outline-none transition-colors" oninput="checkStartButton()" autocomplete="off">
+                        <p id="login-error" class="text-red-500 text-sm mt-2 hidden flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            El número de boleta no coincide con el estudiante seleccionado.
+                        </p>
+                    </div>
+
+                    <button id="btn-start" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition-all duration-200" onclick="startExam()">
+                        Iniciar Evaluación
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        function checkStartButton() {
+            const select = document.getElementById('student-select');
+            const input = document.getElementById('student-id-input');
+            const btn = document.getElementById('btn-start');
+            
+            // Habilitar botón solo si ambos campos tienen algún valor
+            btn.disabled = !select.value || !input.value.trim();
+        }
+
+        async function startExam() {
+            const select = document.getElementById('student-select');
+            const input = document.getElementById('student-id-input');
+            const errorMsg = document.getElementById('login-error');
+            
+            const expectedId = select.value;
+            const enteredId = input.value.trim();
+
+            // Validar que la boleta ingresada sea igual a la esperada según la lista
+            if (expectedId !== enteredId) {
+                errorMsg.classList.remove('hidden');
+                input.classList.add('border-red-500', 'bg-red-50');
+                input.classList.remove('border-gray-300', 'bg-gray-50');
+                return;
+            }
+
+            // Si coincide, limpiar errores y continuar
+            errorMsg.classList.add('hidden');
+            
+            // Guardar solo el nombre para mostrarlo luego (o el formato que desees)
+            const studentName = select.options[select.selectedIndex].text;
+            state.studentName = studentName; 
+            state.status = 'playing';
+            saveState();
+            
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                }
+            } catch(e) {
+                console.log("No se pudo iniciar pantalla completa automáticamente.");
+            }
+
+            render();
+        }
+
+        function createQuizScreen() {
+            const div = document.createElement('div');
+            div.className = 'w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col fade-in border border-gray-100 max-w-4xl mx-auto';
+            
+            const q = QUESTIONS[state.currentQuestion];
+            const progress = ((state.currentQuestion) / QUESTIONS.length) * 100;
+            const answeredCount = Object.keys(state.answers).length;
+
+            let optionsHTML = '';
+            q.options.forEach(opt => {
+                const isSelected = state.answers[q.id] === opt.id;
+                optionsHTML += `
+                    <label class="option-card block relative cursor-pointer group">
+                        <input type="radio" name="question_${q.id}" value="${opt.id}" class="sr-only" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${q.id}, '${opt.id}')">
+                        <div class="p-5 rounded-xl border-2 transition-all duration-200 flex items-start gap-4 ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}">
+                            <div class="radio-circle flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}"></div>
+                            <span class="text-gray-700 font-medium leading-relaxed">${opt.id}) ${opt.text}</span>
+                        </div>
+                    </label>
+                `;
+            });
+
+            div.innerHTML = `
+                <!-- Header Pregunta -->
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex-1 w-full">
+                        <div class="flex justify-between text-sm font-semibold text-gray-500 mb-2">
+                            <span>Pregunta ${state.currentQuestion + 1} de ${QUESTIONS.length}</span>
+                            <span>${answeredCount} respondidas</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuerpo Pregunta -->
+                <div class="p-6 md:p-8 flex-grow">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-8 leading-snug">
+                        ${state.currentQuestion + 1}. ${q.text}
+                    </h2>
+                    <div class="space-y-4">
+                        ${optionsHTML}
+                    </div>
+                </div>
+
+                <!-- Footer Navegación -->
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                    <button onclick="prevQuestion()" class="px-6 py-3 rounded-xl font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${state.currentQuestion === 0 ? 'disabled' : ''}>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            Anterior
+                        </div>
+                    </button>
+                    
+                    ${state.currentQuestion === QUESTIONS.length - 1 
+                        ? `<button onclick="confirmSubmit()" class="px-8 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 shadow-md transition-colors flex items-center gap-2">
+                             Finalizar
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                           </button>`
+                        : `<button onclick="nextQuestion()" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors flex items-center gap-2">
+                             Siguiente
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                           </button>`
+                    }
+                </div>
+            `;
+            return div;
+        }
+
+        function selectAnswer(qId, optId) {
+            state.answers[qId] = optId;
+            saveState();
+            
+            // Pequeña espera visual antes de renderizar (opcional, pero se actualiza en memoria directo)
+            // Hacemos re-render ligero para actualizar UI
+            setTimeout(render, 150); 
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestion > 0) {
+                state.currentQuestion--;
+                saveState();
+                render();
+            }
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestion < QUESTIONS.length - 1) {
+                state.currentQuestion++;
+                saveState();
+                render();
+            }
+        }
+
+        function confirmSubmit() {
+            const answered = Object.keys(state.answers).length;
+            if (answered < QUESTIONS.length) {
+                alert(`Atención: Solo has respondido ${answered} de ${QUESTIONS.length} preguntas. Debes contestar todas antes de enviar voluntariamente.`);
+                return;
+            }
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function submitExam(isForced = false) {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            state.status = 'finished';
+            saveState();
+
+            // Salir de pantalla completa si es posible
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+
+            render();
+        }
+
+        function createResultScreen() {
+            // Calcular estadísticas
+            let correctas = 0;
+            let incorrectas = 0;
+            let sinResponder = 0;
+
+            QUESTIONS.forEach(q => {
+                const ans = state.answers[q.id];
+                if (!ans) {
+                    sinResponder++;
+                } else if (ans === q.correct) {
+                    correctas++;
+                } else {
+                    incorrectas++;
+                }
+            });
+
+            // Fórmula: (Correctas / 30) * 10
+            const calificacionOriginal = (correctas / QUESTIONS.length) * 10;
+            const calificacion = parseFloat(calificacionOriginal.toFixed(1));
+            const aprobado = calificacion >= 6.0;
+
+            const div = document.createElement('div');
+            div.className = 'w-full max-w-4xl mx-auto space-y-6 fade-in';
+
+            // Banner de Causa de finalización (si aplica)
+            let alertHTML = '';
+            if (state.terminationReason === 'cheat') {
+                alertHTML = `
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-xl shadow-sm mb-4">
+                    <p class="font-bold">Evaluación Interrumpida</p>
+                    <p>La prueba fue finalizada automáticamente debido a múltiples salidas no permitidas de la pantalla de evaluación.</p>
+                </div>`;
+            } else if (state.terminationReason === 'timeout') {
+                alertHTML = `
+                <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded-r-xl shadow-sm mb-4">
+                    <p class="font-bold">Tiempo Agotado</p>
+                    <p>El tiempo de la evaluación ha concluido. Se calificaron únicamente las respuestas registradas.</p>
+                </div>`;
+            }
+
+            // Banner de Aprobación
+            const statusBanner = aprobado 
+                ? `<div class="bg-green-100 border border-green-200 rounded-2xl p-6 text-center shadow-sm">
+                    <div class="text-green-600 text-5xl mb-2 flex justify-center"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                    <h2 class="text-2xl font-bold text-green-800 mb-2">APROBADO</h2>
+                    <p class="text-green-700">Felicidades. Has acreditado satisfactoriamente la evaluación.</p>
+                   </div>`
+                : `<div class="bg-red-100 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
+                    <div class="text-red-500 text-5xl mb-2 flex justify-center"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                    <h2 class="text-2xl font-bold text-red-800 mb-2">REPROBADO</h2>
+                    <p class="text-red-700">No alcanzaste la calificación mínima aprobatoria. Te recomendamos reforzar los contenidos evaluados.</p>
+                   </div>`;
+
+            // Tabla de retroalimentación detallada
+            let tableRows = '';
+            QUESTIONS.forEach((q, index) => {
+                const ans = state.answers[q.id];
+                const isCorrect = ans === q.correct;
+                let statusIcon = !ans ? '<span class="text-gray-400 font-bold">-</span>' : 
+                                 isCorrect ? '<span class="text-green-500">✅ Correcta</span>' : '<span class="text-red-500">❌ Incorrecta</span>';
+                
+                tableRows += `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="p-4 text-sm text-gray-800 font-medium">${index + 1}. ${q.text}</td>
+                        <td class="p-4 text-sm text-center font-bold text-gray-600">${ans || '-'}</td>
+                        <td class="p-4 text-sm text-center font-bold text-green-600">${q.correct}</td>
+                        <td class="p-4 text-sm text-center whitespace-nowrap">${statusIcon}</td>
+                    </tr>
+                `;
+            });
+
+            div.innerHTML = `
+                ${alertHTML}
+                
+                <!-- Tarjeta Principal de Resultados -->
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                    <div class="bg-gray-800 text-white p-6 text-center">
+                        <h1 class="text-2xl font-bold">Resultados de la Evaluación</h1>
+                        <p class="text-gray-300 mt-2">${state.studentName}</p>
+                    </div>
+                    
+                    <div class="p-6 md:p-8">
+                        ${statusBanner}
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                            <div class="bg-blue-50 rounded-xl p-4 text-center border border-blue-100 shadow-sm">
+                                <p class="text-sm text-blue-600 font-semibold mb-1">Calificación</p>
+                                <p class="text-3xl font-bold text-blue-800">${calificacion}</p>
+                                <p class="text-xs text-blue-500 mt-1">sobre 10</p>
+                            </div>
+                            <div class="bg-green-50 rounded-xl p-4 text-center border border-green-100 shadow-sm">
+                                <p class="text-sm text-green-600 font-semibold mb-1">Correctas</p>
+                                <p class="text-3xl font-bold text-green-800">${correctas}</p>
+                                <p class="text-xs text-green-500 mt-1">preguntas</p>
+                            </div>
+                            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100 shadow-sm">
+                                <p class="text-sm text-red-600 font-semibold mb-1">Incorrectas</p>
+                                <p class="text-3xl font-bold text-red-800">${incorrectas}</p>
+                                <p class="text-xs text-red-500 mt-1">preguntas</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 shadow-sm">
+                                <p class="text-sm text-gray-600 font-semibold mb-1">Sin Responder</p>
+                                <p class="text-3xl font-bold text-gray-800">${sinResponder}</p>
+                                <p class="text-xs text-gray-500 mt-1">preguntas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalles Pregunta por Pregunta -->
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mt-6 mb-12">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="font-bold text-gray-800">Desglose de Respuestas</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                                    <th class="p-4 font-semibold w-1/2">Pregunta</th>
+                                    <th class="p-4 font-semibold text-center">Tu Respuesta</th>
+                                    <th class="p-4 font-semibold text-center">Respuesta Correcta</th>
+                                    <th class="p-4 font-semibold text-center">Resultado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            render();
+        });
+    </script>
+</body>
+</html>
