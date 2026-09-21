@@ -170,336 +170,36 @@
 
         // Banco de preguntas (30 preguntas)
         const QUESTIONS = [
-            {
-                id: 1,
-                text: "¿Qué evento histórico en la década de 1820 se destaca como la primera gran sacudida en la transición del trabajo artesanal al sistema de fábricas en Lowell, Massachusetts?",
-                options: [
-                    { id: "A", text: "La invención de la máquina de vapor de Watt." },
-                    { id: "B", text: "La llegada de 5,000 trabajadores a fábricas de algodón estrictamente reguladas por el reloj." },
-                    { id: "C", text: "La creación del primer telar automatizado en Inglaterra." },
-                    { id: "D", text: "La promulgación de leyes laborales agrícolas." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 2,
-                text: "Según la Teoría X descrita por Douglas McGregor, ¿cuál era la premisa central sobre la motivación laboral en el siglo XIX?",
-                options: [
-                    { id: "A", text: "Los trabajadores buscan autonomía y satisfacción personal de forma natural." },
-                    { id: "B", text: "La motivación depende de la ergonomía del espacio de trabajo." },
-                    { id: "C", text: "Los humanos odian trabajar por naturaleza y solo se mueven por miedo o supervivencia." },
-                    { id: "D", text: "El trabajo intelectual reemplaza completamente al esfuerzo físico." }
-                ],
-                correct: "C"
-            },
-            {
-                id: 3,
-                text: "¿Qué término utiliza el Pew Research Center para describir la presión sentida por el 64% de los trabajadores al percibir que la tecnología borra los límites entre la vida personal y laboral?",
-                options: [
-                    { id: "A", text: "Alienación física." },
-                    { id: "B", text: "Tecnoestrés." },
-                    { id: "C", text: "Gestión algorítmica." },
-                    { id: "D", text: "Paradoja del rendimiento." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 4,
-                text: "En el modelo psicológico de Hackman y Oldham sobre la motivación laboral, ¿cuántos elementos críticos se señalan?",
-                options: [
-                    { id: "A", text: "Tres elementos." },
-                    { id: "B", text: "Cinco elementos críticos." },
-                    { id: "C", text: "Siete elementos." },
-                    { id: "D", text: "Diez elementos." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 5,
-                text: "En la cuarta revolución industrial, ¿cuál es el principio clave respecto a la relación entre la inteligencia artificial y el trabajador humano?",
-                options: [
-                    { id: "A", text: "Reemplazar gradualmente al humano en la toma de decisiones clave." },
-                    { id: "B", text: "Mantener siempre al humano en el circuito de control como amplificador de la mente." },
-                    { id: "C", text: "Automatizar por completo el trabajo creativo y estratégico." },
-                    { id: "D", text: "Eliminar la supervisión humana en los entornos corporativos." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 6,
-                text: "¿En qué instalaciones y año comenzó el experimento sobre iluminación liderado por Elton Mayo?",
-                options: [
-                    { id: "A", text: "General Motors en 1959." },
-                    { id: "B", text: "Western Electric Company en Hawthorne en 1927." },
-                    { id: "C", text: "Stanford University en 1932." },
-                    { id: "D", text: "Harvard Business School en 1914." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 7,
-                text: "¿Qué resultado desconcertante ocurrió con la productividad cuando los investigadores redujeron la iluminación al mínimo en el grupo experimental?",
-                options: [
-                    { id: "A", text: "La producción colapsó de inmediato." },
-                    { id: "B", text: "La producción se mantuvo sin ningún cambio." },
-                    { id: "C", text: "La producción siguió subiendo de manera inesperada." },
-                    { id: "D", text: "Los trabajadores abandonaron la fábrica." }
-                ],
-                correct: "C"
-            },
-            {
-                id: 8,
-                text: "¿Cómo se define el concepto psicológico de 'reactividad' identificado durante el Experimento Hawthorne?",
-                options: [
-                    { id: "A", text: "La tendencia a rechazar los cambios tecnológicos." },
-                    { id: "B", text: "La inclinación involuntaria a cambiar o mejorar el comportamiento al sentirse observado y valorado." },
-                    { id: "C", text: "La resistencia biológica a trabajar en turnos nocturnos." },
-                    { id: "D", text: "La respuesta física a los cambios de temperatura ambiental." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 9,
-                text: "Según Elton Mayo, ¿qué impacto tiene la especialización extrema y la monotonía en el trabajador?",
-                options: [
-                    { id: "A", text: "Constituye la cumbre absoluta de la eficiencia sostenible." },
-                    { id: "B", text: "Apaga el espíritu humano y aniquila la motivación interna." },
-                    { id: "C", text: "Incrementa la estabilidad psicológica a largo plazo." },
-                    { id: "D", text: "Previene la aparición del agotamiento laboral." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 10,
-                text: "¿Qué factor demostró ser mucho más potente y eficaz para motivar a los empleados que imponer reglas transaccionales?",
-                options: [
-                    { id: "A", text: "El incremento constante de incentivos económicos aislados." },
-                    { id: "B", text: "La confianza y validación de la gerencia." },
-                    { id: "C", text: "La reducción de los tiempos de descanso." },
-                    { id: "D", text: "La rotación obligatoria de puestos de trabajo." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 11,
-                text: "En la filosofía de Aristóteles, ¿cómo se posicionaba el trabajo manual dentro de la pirámide de la 'eudaimonía'?",
-                options: [
-                    { id: "A", text: "Como la forma suprema de virtud moral." },
-                    { id: "B", text: "Como un medio utilitario y necesidad básica de supervivencia, desconectado del verdadero florecimiento humano." },
-                    { id: "C", text: "Como el único camino para la contemplación filosófica." },
-                    { id: "D", text: "Como un deber cívico para la aristocracia." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 12,
-                text: "Según la ética deontológica de Kant aplicada a las organizaciones, ¿cuál es el principio para tratar a los colaboradores?",
-                options: [
-                    { id: "A", text: "Utilizarlos como instrumentos para elevar la productividad general." },
-                    { id: "B", text: "Tratarlos siempre como fines en sí mismos, respetando su dignidad incondicional y nunca como meros instrumentos." },
-                    { id: "C", text: "Priorizar las metas financieras de la empresa por encima del individuo." },
-                    { id: "D", text: "Medir su valor únicamente a través de evaluaciones de desempeño." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 13,
-                text: "¿Qué es la 'paradoja del rendimiento' en la cultura corporativa moderna?",
-                options: [
-                    { id: "A", text: "La mejora de la eficiencia mediante descansos estructurados." },
-                    { id: "B", text: "La destrucción de la autenticidad al convertir la motivación intrínseca en una meta forzada evaluada anualmente." },
-                    { id: "C", text: "El equilibrio entre facturación económica y salud mental." },
-                    { id: "D", text: "La reducción de errores operativos por automatización." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 14,
-                text: "¿Cuáles son las dos condiciones necesarias para que un trabajo tenga verdadero sentido normativo y ético?",
-                options: [
-                    { id: "A", text: "Un salario elevado y prestigio corporativo." },
-                    { id: "B", text: "Que guste subjetivamente al trabajador y genere un impacto positivo real en la sociedad (componente objetivo)." },
-                    { id: "C", text: "Horarios flexibles y ausencia de supervisión." },
-                    { id: "D", text: "Incentivos individuales y estabilidad financiera." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 15,
-                text: "Según Max Weber, ¿qué acontecimiento histórico transformó el trabajo en un deber moral y vocación?",
-                options: [
-                    { id: "A", text: "La Revolución Francesa." },
-                    { id: "B", text: "La Reforma Protestante." },
-                    { id: "C", text: "La creación de las primeras universidades." },
-                    { id: "D", text: "El desarrollo de la imprenta." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 16,
-                text: "¿Qué premisa define el concepto de la 'mano invisible' de Adam Smith?",
-                options: [
-                    { id: "A", text: "La intervención directa del Estado para regular la oferta y la demanda." },
-                    { id: "B", text: "La idea de que la búsqueda del beneficio económico individual contribuye de forma natural al bienestar general." },
-                    { id: "C", text: "La redistribución obligatoria de utilidades entre la fuerza laboral." },
-                    { id: "D", text: "La eliminación de los mercados financieros internacionales." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 17,
-                text: "En la teoría marxista, ¿cómo se define matemáticamente la 'plusvalía'?",
-                options: [
-                    { id: "A", text: "El costo de mantenimiento de las instalaciones industriales." },
-                    { id: "B", text: "La diferencia entre el valor real que produce el trabajador y el salario que termina recibiendo." },
-                    { id: "C", text: "El impuesto cobrado por el Estado a las empresas." },
-                    { id: "D", text: "El margen de pérdida por obsolescencia tecnológica." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 18,
-                text: "Según Karl Marx, ¿cuáles son tres contradicciones o fricciones internas del sistema capitalista?",
-                options: [
-                    { id: "A", text: "La falta de innovación, el exceso de regulación y la deflación." },
-                    { id: "B", text: "La alienación, las crisis de sobreproducción y la concentración monopolista." },
-                    { id: "C", text: "El pleno empleo, la igualdad salarial y el estancamiento tecnológico." },
-                    { id: "D", text: "La escasez de materias primas, las huelgas agrarias y los altos impuestos." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 19,
-                text: "¿Qué caracteriza al 'paradigma del monopolio transnacional' del siglo XXI?",
-                options: [
-                    { id: "A", text: "El retorno a mercados locales artesanales." },
-                    { id: "B", text: "Una red financiera global donde el capital supera fronteras nacionales y genera ganancias mediante especulación." },
-                    { id: "C", text: "La centralización absoluta de la producción en el Estado." },
-                    { id: "D", text: "La desaparición de la banca internacional." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 20,
-                text: "En el materialismo histórico, ¿cuál es el motor que impulsa el avance de la historia?",
-                options: [
-                    { id: "A", text: "El comercio internacional." },
-                    { id: "B", text: "La lucha de clases." },
-                    { id: "C", text: "El desarrollo de nuevas tecnologías de comunicación." },
-                    { id: "D", text: "La acumulación de reservas monetarias." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 21,
-                text: "¿Hace cuántos años y en qué región comenzó históricamente la práctica estructurada de la esclavitud?",
-                options: [
-                    { id: "A", text: "Hace 2,000 años en el Imperio Romano." },
-                    { id: "B", text: "Hace unos 5,000 años en Mesopotamia y Egipto." },
-                    { id: "C", text: "Hace 1,000 años en la Europa medieval." },
-                    { id: "D", text: "Hace 500 años en las colonias americanas." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 22,
-                text: "En la Atenas clásica, ¿qué porcentaje aproximado de la población estaba constituido por personas esclavizadas?",
-                options: [
-                    { id: "A", text: "Un 10%." },
-                    { id: "B", text: "Un 25%." },
-                    { id: "C", text: "Un 50%." },
-                    { id: "D", text: "Un 75%." }
-                ],
-                correct: "D"
-            },
-            {
-                id: 23,
-                text: "Según datos de la Organización Internacional del Trabajo (OIT), ¿cuántas personas están atrapadas en alguna forma de esclavitud moderna actualmente?",
-                options: [
-                    { id: "A", text: "10 millones de personas." },
-                    { id: "B", text: "25 millones de personas." },
-                    { id: "C", text: "50 millones de personas." },
-                    { id: "D", text: "100 millones de personas." }
-                ],
-                correct: "C"
-            },
-            {
-                id: 24,
-                text: "De las víctimas globales de esclavitud moderna, ¿cuántas corresponden a trabajos forzados y cuántas a matrimonios forzados?",
-                options: [
-                    { id: "A", text: "28 millones en trabajos forzados y 22 millones en matrimonios forzados." },
-                    { id: "B", text: "40 millones en trabajos forzados y 10 millones en matrimonios forzados." },
-                    { id: "C", text: "15 millones en trabajos forzados y 35 millones en matrimonios forzados." },
-                    { id: "D", text: "25 millones en trabajos forzados y 25 millones en matrimonios forzados." }
-                ],
-                correct: "A"
-            },
-            {
-                id: 25,
-                text: "¿Qué aumento en la detección de víctimas de trata a nivel mundial se ha registrado tras conflictos e inestabilidades geopolíticas recientes como la guerra en Ucrania?",
-                options: [
-                    { id: "A", text: "Un 10%." },
-                    { id: "B", text: "Un 25%." },
-                    { id: "C", text: "Un 40%." },
-                    { id: "D", text: "Un 50%." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 26,
-                text: "Según la teoría de los dos factores de Frederick Herzberg, ¿cuál es el papel de los 'factores higiénicos' (como el salario base o la seguridad física)?",
-                options: [
-                    { id: "A", text: "Elevar el rendimiento a niveles superiores." },
-                    { id: "B", text: "Evitar que la máquina colapse por la fricción y prevenir la insatisfacción." },
-                    { id: "C", text: "Fomentar el entusiasmo creativo espontáneo." },
-                    { id: "D", text: "Sustituir la necesidad de un liderazgo cercano." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 27,
-                text: "En un estudio realizado en una empresa de ingeniería, ¿qué coeficientes confirmaron la correlación entre el clima organizacional y el desempeño?",
-                options: [
-                    { id: "A", text: "Pruebas T de Student y Anova." },
-                    { id: "B", text: "Coeficientes de correlación de Pearson y Spearman." },
-                    { id: "C", text: "Análisis de regresión logística." },
-                    { id: "D", text: "Varianza y desviación estándar." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 28,
-                text: "En un caso real de la industria manufacturera en Ciudad Juárez (ensamble de kit en 50 minutos), ¿qué ocurrió en los puestos sin ergonomía?",
-                options: [
-                    { id: "A", text: "Los operarios aumentaron su velocidad para compensar las molestias." },
-                    { id: "B", text: "Los tiempos de ensamble se volvieron erráticos y se fracasaba en la meta de 50 minutos." },
-                    { id: "C", text: "La fatiga física no tuvo ningún impacto en el rendimiento." },
-                    { id: "D", text: "Los errores de calidad disminuyeron." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 29,
-                text: "¿Cuáles son los cuatro estilos de liderazgo formulados por Rensis Likert?",
-                options: [
-                    { id: "A", text: "Autoritario, Democrático, Laissez-faire y Burocrático." },
-                    { id: "B", text: "Coercitivamente centralista, Benevolente, Consultivo y Participativo." },
-                    { id: "C", text: "Transaccional, Transformacional, Pasivo y Directivo." },
-                    { id: "D", text: "Técnico, Administrativo, Emocional y Operativo." }
-                ],
-                correct: "B"
-            },
-            {
-                id: 30,
-                text: "Según las proyecciones laborales para 2026, ¿qué busca el talento actual además de la compensación económica?",
-                options: [
-                    { id: "A", text: "Supervisión digital constante e incentivos individuales." },
-                    { id: "B", text: "Sentido, equilibrio, coherencia y espacios donde prosperar sin sacrificar su salud física o mental." },
-                    { id: "C", text: "Extensión de la jornada laboral a cambio de bonificaciones." },
-                    { id: "D", text: "Un entorno estrictamente competitivo y jerárquico." }
-                ],
-                correct: "B"
-            }
+            { id: 1, text: "¿Qué evento histórico en la década de 1820 se destaca como la primera gran sacudida en la transición del trabajo artesanal al sistema de fábricas en Lowell, Massachusetts?", options: [ { id: "A", text: "La invención de la máquina de vapor de Watt." }, { id: "B", text: "La llegada de 5,000 trabajadores a fábricas de algodón estrictamente reguladas por el reloj." }, { id: "C", text: "La creación del primer telar automatizado en Inglaterra." }, { id: "D", text: "La promulgación de leyes laborales agrícolas." } ], correct: "B" },
+            { id: 2, text: "Según la Teoría X descrita por Douglas McGregor, ¿cuál era la premisa central sobre la motivación laboral en el siglo XIX?", options: [ { id: "A", text: "Los trabajadores buscan autonomía y satisfacción personal de forma natural." }, { id: "B", text: "La motivación depende de la ergonomía del espacio de trabajo." }, { id: "C", text: "Los humanos odian trabajar por naturaleza y solo se mueven por miedo o supervivencia." }, { id: "D", text: "El trabajo intelectual reemplaza completamente al esfuerzo físico." } ], correct: "C" },
+            { id: 3, text: "¿Qué término utiliza el Pew Research Center para describir la presión sentida por el 64% de los trabajadores al percibir que la tecnología borra los límites entre la vida personal y laboral?", options: [ { id: "A", text: "Alienación física." }, { id: "B", text: "Tecnoestrés." }, { id: "C", text: "Gestión algorítmica." }, { id: "D", text: "Paradoja del rendimiento." } ], correct: "B" },
+            { id: 4, text: "En el modelo psicológico de Hackman y Oldham sobre la motivación laboral, ¿cuántos elementos críticos se señalan?", options: [ { id: "A", text: "Tres elementos." }, { id: "B", text: "Cinco elementos críticos." }, { id: "C", text: "Siete elementos." }, { id: "D", text: "Diez elementos." } ], correct: "B" },
+            { id: 5, text: "En la cuarta revolución industrial, ¿cuál es el principio clave respecto a la relación entre la inteligencia artificial y el trabajador humano?", options: [ { id: "A", text: "Reemplazar gradualmente al humano en la toma de decisiones clave." }, { id: "B", text: "Mantener siempre al humano en el circuito de control como amplificador de la mente." }, { id: "C", text: "Automatizar por completo el trabajo creativo y estratégico." }, { id: "D", text: "Eliminar la supervisión humana en los entornos corporativos." } ], correct: "B" },
+            { id: 6, text: "¿En qué instalaciones y año comenzó el experimento sobre iluminación liderado por Elton Mayo?", options: [ { id: "A", text: "General Motors en 1959." }, { id: "B", text: "Western Electric Company en Hawthorne en 1927." }, { id: "C", text: "Stanford University en 1932." }, { id: "D", text: "Harvard Business School en 1914." } ], correct: "B" },
+            { id: 7, text: "¿Qué resultado desconcertante ocurrió con la productividad cuando los investigadores redujeron la iluminación al mínimo en el grupo experimental?", options: [ { id: "A", text: "La producción colapsó de inmediato." }, { id: "B", text: "La producción se mantuvo sin ningún cambio." }, { id: "C", text: "La producción siguió subiendo de manera inesperada." }, { id: "D", text: "Los trabajadores abandonaron la fábrica." } ], correct: "C" },
+            { id: 8, text: "¿Cómo se define el concepto psicológico de 'reactividad' identificado durante el Experimento Hawthorne?", options: [ { id: "A", text: "La tendencia a rechazar los cambios tecnológicos." }, { id: "B", text: "La inclinación involuntaria a cambiar o mejorar el comportamiento al sentirse observado y valorado." }, { id: "C", text: "La resistencia biológica a trabajar en turnos nocturnos." }, { id: "D", text: "La respuesta física a los cambios de temperatura ambiental." } ], correct: "B" },
+            { id: 9, text: "Según Elton Mayo, ¿qué impacto tiene la especialización extrema y la monotonía en el trabajador?", options: [ { id: "A", text: "Constituye la cumbre absoluta de la eficiencia sostenible." }, { id: "B", text: "Apaga el espíritu humano y aniquila la motivación interna." }, { id: "C", text: "Incrementa la estabilidad psicológica a largo plazo." }, { id: "D", text: "Previene la aparición del agotamiento laboral." } ], correct: "B" },
+            { id: 10, text: "¿Qué factor demostró ser mucho más potente y eficaz para motivar a los empleados que imponer reglas transaccionales?", options: [ { id: "A", text: "El incremento constante de incentivos económicos aislados." }, { id: "B", text: "La confianza y validación de la gerencia." }, { id: "C", text: "La reducción de los tiempos de descanso." }, { id: "D", text: "La rotación obligatoria de puestos de trabajo." } ], correct: "B" },
+            { id: 11, text: "En la filosofía de Aristóteles, ¿cómo se posicionaba el trabajo manual dentro de la pirámide de la 'eudaimonía'?", options: [ { id: "A", text: "Como la forma suprema de virtud moral." }, { id: "B", text: "Como un medio utilitario y necesidad básica de supervivencia, desconectado del verdadero florecimiento humano." }, { id: "C", text: "Como el único camino para la contemplación filosófica." }, { id: "D", text: "Como un deber cívico para la aristocracia." } ], correct: "B" },
+            { id: 12, text: "Según la ética deontológica de Kant aplicada a las organizaciones, ¿cuál es el principio para tratar a los colaboradores?", options: [ { id: "A", text: "Utilizarlos como instrumentos para elevar la productividad general." }, { id: "B", text: "Tratarlos siempre como fines en sí mismos, respetando su dignidad incondicional y nunca como meros instrumentos." }, { id: "C", text: "Priorizar las metas financieras de la empresa por encima del individuo." }, { id: "D", text: "Medir su valor únicamente a través de evaluaciones de desempeño." } ], correct: "B" },
+            { id: 13, text: "¿Qué es la 'paradoja del rendimiento' en la cultura corporativa moderna?", options: [ { id: "A", text: "La mejora de la eficiencia mediante descansos estructurados." }, { id: "B", text: "La destrucción de la autenticidad al convertir la motivación intrínseca en una meta forzada evaluada anualmente." }, { id: "C", text: "El equilibrio entre facturación económica y salud mental." }, { id: "D", text: "La reducción de errores operativos por automatización." } ], correct: "B" },
+            { id: 14, text: "¿Cuáles son las dos condiciones necesarias para que un trabajo tenga verdadero sentido normativo y ético?", options: [ { id: "A", text: "Un salario elevado y prestigio corporativo." }, { id: "B", text: "Que guste subjetivamente al trabajador y genere un impacto positivo real en la sociedad (componente objetivo)." }, { id: "C", text: "Horarios flexibles y ausencia de supervisión." }, { id: "D", text: "Incentivos individuales y estabilidad financiera." } ], correct: "B" },
+            { id: 15, text: "Según Max Weber, ¿qué acontecimiento histórico transformó el trabajo en un deber moral y vocación?", options: [ { id: "A", text: "La Revolución Francesa." }, { id: "B", text: "La Reforma Protestante." }, { id: "C", text: "La creación de las primeras universidades." }, { id: "D", text: "El desarrollo de la imprenta." } ], correct: "B" },
+            { id: 16, text: "¿Qué premisa define el concepto de la 'mano invisible' de Adam Smith?", options: [ { id: "A", text: "La intervención directa del Estado para regular la oferta y la demanda." }, { id: "B", text: "La idea de que la búsqueda del beneficio económico individual contribuye de forma natural al bienestar general." }, { id: "C", text: "La redistribución obligatoria de utilidades entre la fuerza laboral." }, { id: "D", text: "La eliminación de los mercados financieros internacionales." } ], correct: "B" },
+            { id: 17, text: "En la teoría marxista, ¿cómo se define matemáticamente la 'plusvalía'?", options: [ { id: "A", text: "El costo de mantenimiento de las instalaciones industriales." }, { id: "B", text: "La diferencia entre el valor real que produce el trabajador y el salario que termina recibiendo." }, { id: "C", text: "El impuesto cobrado por el Estado a las empresas." }, { id: "D", text: "El margen de pérdida por obsolescencia tecnológica." } ], correct: "B" },
+            { id: 18, text: "Según Karl Marx, ¿cuáles son tres contradicciones o fricciones internas del sistema capitalista?", options: [ { id: "A", text: "La falta de innovación, el exceso de regulación y la deflación." }, { id: "B", text: "La alienación, las crisis de sobreproducción y la concentración monopolista." }, { id: "C", text: "El pleno empleo, la igualdad salarial y el estancamiento tecnológico." }, { id: "D", text: "La escasez de materias primas, las huelgas agrarias y los altos impuestos." } ], correct: "B" },
+            { id: 19, text: "¿Qué caracteriza al 'paradigma del monopolio transnacional' del siglo XXI?", options: [ { id: "A", text: "El retorno a mercados locales artesanales." }, { id: "B", text: "Una red financiera global donde el capital supera fronteras nacionales y genera ganancias mediante especulación." }, { id: "C", text: "La centralización absoluta de la producción en el Estado." }, { id: "D", text: "La desaparición de la banca internacional." } ], correct: "B" },
+            { id: 20, text: "En el materialismo histórico, ¿cuál es el motor que impulsa el avance de la historia?", options: [ { id: "A", text: "El comercio internacional." }, { id: "B", text: "La lucha de clases." }, { id: "C", text: "El desarrollo de nuevas tecnologías de comunicación." }, { id: "D", text: "La acumulación de reservas monetarias." } ], correct: "B" },
+            { id: 21, text: "¿Hace cuántos años y en qué región comenzó históricamente la práctica estructurada de la esclavitud?", options: [ { id: "A", text: "Hace 2,000 años en el Imperio Romano." }, { id: "B", text: "Hace unos 5,000 años en Mesopotamia y Egipto." }, { id: "C", text: "Hace 1,000 años en la Europa medieval." }, { id: "D", text: "Hace 500 años en las colonias americanas." } ], correct: "B" },
+            { id: 22, text: "En la Atenas clásica, ¿qué porcentaje aproximado de la población estaba constituido por personas esclavizadas?", options: [ { id: "A", text: "Un 10%." }, { id: "B", text: "Un 25%." }, { id: "C", text: "Un 50%." }, { id: "D", text: "Un 75%." } ], correct: "D" },
+            { id: 23, text: "Según datos de la Organización Internacional del Trabajo (OIT), ¿cuántas personas están atrapadas en alguna forma de esclavitud moderna actualmente?", options: [ { id: "A", text: "10 millones de personas." }, { id: "B", text: "25 millones de personas." }, { id: "C", text: "50 millones de personas." }, { id: "D", text: "100 millones de personas." } ], correct: "C" },
+            { id: 24, text: "De las víctimas globales de esclavitud moderna, ¿cuántas corresponden a trabajos forzados y cuántas a matrimonios forzados?", options: [ { id: "A", text: "28 millones en trabajos forzados y 22 millones en matrimonios forzados." }, { id: "B", text: "40 millones en trabajos forzados y 10 millones en matrimonios forzados." }, { id: "C", text: "15 millones en trabajos forzados y 35 millones en matrimonios forzados." }, { id: "D", text: "25 millones en trabajos forzados y 25 millones en matrimonios forzados." } ], correct: "A" },
+            { id: 25, text: "¿Qué aumento en la detección de víctimas de trata a nivel mundial se ha registrado tras conflictos e inestabilidades geopolíticas recientes como la guerra en Ucrania?", options: [ { id: "A", text: "Un 10%." }, { id: "B", text: "Un 25%." }, { id: "C", text: "Un 40%." }, { id: "D", text: "Un 50%." } ], correct: "B" },
+            { id: 26, text: "Según la teoría de los dos factores de Frederick Herzberg, ¿cuál es el papel de los 'factores higiénicos' (como el salario base o la seguridad física)?", options: [ { id: "A", text: "Elevar el rendimiento a niveles superiores." }, { id: "B", text: "Evitar que la máquina colapse por la fricción y prevenir la insatisfacción." }, { id: "C", text: "Fomentar el entusiasmo creativo espontáneo." }, { id: "D", text: "Sustituir la necesidad de un liderazgo cercano." } ], correct: "B" },
+            { id: 27, text: "En un estudio realizado en una empresa de ingeniería, ¿qué coeficientes confirmaron la correlación entre el clima organizacional y el desempeño?", options: [ { id: "A", text: "Pruebas T de Student y Anova." }, { id: "B", text: "Coeficientes de correlación de Pearson y Spearman." }, { id: "C", text: "Análisis de regresión logística." }, { id: "D", text: "Varianza y desviación estándar." } ], correct: "B" },
+            { id: 28, text: "En un caso real de la industria manufacturera en Ciudad Juárez (ensamble de kit en 50 minutos), ¿qué ocurrió en los puestos sin ergonomía?", options: [ { id: "A", text: "Los operarios aumentaron su velocidad para compensar las molestias." }, { id: "B", text: "Los tiempos de ensamble se volvieron erráticos y se fracasaba en la meta de 50 minutos." }, { id: "C", text: "La fatiga física no tuvo ningún impacto en el rendimiento." }, { id: "D", text: "Los errores de calidad disminuyeron." } ], correct: "B" },
+            { id: 29, text: "¿Cuáles son los cuatro estilos de liderazgo formulados por Rensis Likert?", options: [ { id: "A", text: "Autoritario, Democrático, Laissez-faire y Burocrático." }, { id: "B", text: "Coercitivamente centralista, Benevolente, Consultivo y Participativo." }, { id: "C", text: "Transaccional, Transformacional, Pasivo y Directivo." }, { id: "D", text: "Técnico, Administrativo, Emocional y Operativo." } ], correct: "B" },
+            { id: 30, text: "Según las proyecciones laborales para 2026, ¿qué busca el talento actual además de la compensación económica?", options: [ { id: "A", text: "Supervisión digital constante e incentivos individuales." }, { id: "B", text: "Sentido, equilibrio, coherencia y espacios donde prosperar sin sacrificar su salud física o mental." }, { id: "C", text: "Extensión de la jornada laboral a cambio de bonificaciones." }, { id: "D", text: "Un entorno estrictamente competitivo y jerárquico." } ], correct: "B" }
         ];
 
         const STORAGE_KEY = 'evaluacion_estado_v1';
@@ -891,20 +591,22 @@
                     <p class="text-red-700">No alcanzaste la calificación mínima aprobatoria. Te recomendamos reforzar los contenidos evaluados.</p>
                    </div>`;
 
-            let tableRows = '';
+            let gridItems = '';
             QUESTIONS.forEach((q, index) => {
                 const ans = state.answers[q.id];
                 const isCorrect = ans === q.correct;
-                let statusIcon = !ans ? '<span class="text-gray-400 font-bold">-</span>' : 
-                                 isCorrect ? '<span class="text-green-500">Correcta</span>' : '<span class="text-red-500">Incorrecta</span>';
                 
-                tableRows += `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td class="p-3 text-sm text-gray-800">${index + 1}. ${q.text}</td>
-                        <td class="p-3 text-sm text-center font-bold text-gray-600">${ans || '-'}</td>
-                        <td class="p-3 text-sm text-center font-bold text-green-600">${q.correct}</td>
-                        <td class="p-3 text-sm text-center font-medium">${statusIcon}</td>
-                    </tr>
+                let statusText = !ans 
+                    ? '<span class="text-gray-500 font-bold bg-gray-200 px-2 py-1 rounded text-xs">Sin responder</span>' 
+                    : isCorrect 
+                        ? '<span class="text-green-700 font-bold bg-green-100 px-2 py-1 rounded text-xs">Correcta</span>' 
+                        : '<span class="text-red-700 font-bold bg-red-100 px-2 py-1 rounded text-xs">Incorrecta</span>';
+                
+                gridItems += `
+                    <div class="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
+                        <span class="text-sm font-bold text-gray-700">Pregunta ${index + 1}</span>
+                        ${statusText}
+                    </div>
                 `;
             });
 
@@ -946,20 +648,10 @@
                         </div>
                         
                         <div class="mt-10">
-                            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Desglose de Respuestas</h3>
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                                        <th class="p-3 font-semibold w-1/2">Pregunta</th>
-                                        <th class="p-3 font-semibold text-center">Respuesta</th>
-                                        <th class="p-3 font-semibold text-center">Correcta</th>
-                                        <th class="p-3 font-semibold text-center">Resultado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tableRows}
-                                </tbody>
-                            </table>
+                            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 text-center text-lg">Desglose de Resultados</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                ${gridItems}
+                            </div>
                         </div>
                     </div>
                 </div>
