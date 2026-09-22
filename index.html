@@ -131,7 +131,7 @@
     <div id="teacher-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
             <h3 class="text-2xl font-bold text-gray-900 mb-4">Acceso Docente</h3>
-            <p class="text-gray-600 mb-4 text-sm">Ingrese la clave para acceder al concentrado de calificaciones.</p>
+            <p class="text-gray-600 mb-4 text-sm">Ingrese la clave para acceder al concentrado de calificaciones locales.</p>
             <input type="password" id="teacher-password" class="w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-50 border outline-none mb-4 text-center text-lg tracking-widest" placeholder="Contraseña">
             <p id="teacher-error" class="text-red-500 text-sm hidden mb-4 font-semibold">Contraseña incorrecta</p>
             <div class="flex gap-3">
@@ -146,8 +146,7 @@
         // CONFIGURACIÓN DE LA NUBE (GOOGLE SHEETS)
         // =========================================================================
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_FSy64Gh-2zUYktSU3mcb-CSSQIV8goSdImu3er9ghrZo0Tg9mC1rf1iJODZo4UAE/exec"; 
-        const CLOUD_ENABLED = true;
-
+        const CLOUD_ENABLED = true; 
         // =========================================================================
 
         const RAW_STUDENTS = [
@@ -245,7 +244,10 @@
         }
 
         function saveState() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            // Solo guardamos si NO ha terminado. Si ya terminó, queremos que se borre al refrescar.
+            if(state.status !== 'finished') {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
         }
 
         document.addEventListener('copy', (e) => e.preventDefault());
@@ -368,13 +370,9 @@
             document.getElementById('confirm-modal').classList.add('hidden');
         }
 
-        // =========================================================================
-        // FUNCIÓN MODIFICADA PARA GUARDAR EN GOOGLE SHEETS Y LOCAL
-        // =========================================================================
         async function submitExam(isForced = false) {
             document.getElementById('confirm-modal').classList.add('hidden');
             
-            // Calculamos la calificación
             let correctas = 0;
             QUESTIONS.forEach(q => { if (state.answers[q.id] === q.correct) correctas++; });
             const calificacion = parseFloat(((correctas / QUESTIONS.length) * 10).toFixed(1));
@@ -387,7 +385,7 @@
                 reason: state.terminationReason || 'Normal'
             };
 
-            // 1. Guardar de forma Local (Backup de seguridad)
+            // Guardar local (Para panel de profesor en esta PC)
             const savedResults = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
             const exists = savedResults.find(r => r.id === newResult.id);
             if(!exists) {
@@ -395,12 +393,12 @@
                 localStorage.setItem(RESULTS_KEY, JSON.stringify(savedResults));
             }
 
-            // 2. Enviar silenciosamente a Google Sheets si está activado
+            // Enviar a Google Sheets
             if (CLOUD_ENABLED && !exists) {
                 try {
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors', // Evita bloqueos de seguridad del navegador del alumno
+                        mode: 'no-cors',
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -418,7 +416,9 @@
             }
 
             state.status = 'finished';
-            saveState();
+            
+            // ELIMINAR ESTADO LOCAL PARA QUE AL RECARGAR EMPIECE DE CERO
+            localStorage.removeItem(STORAGE_KEY);
 
             if (document.fullscreenElement) {
                 document.exitFullscreen().catch(err => console.log(err));
@@ -453,9 +453,6 @@
             render();
         }
 
-        // =========================================================================
-        // EXPORTAR A EXCEL (CSV)
-        // =========================================================================
         function downloadCSV(resultsArray) {
             if (!resultsArray || resultsArray.length === 0) {
                 alert("No hay resultados para exportar.");
@@ -480,32 +477,39 @@
         }
 
         // =========================================================================
-        // GENERACIÓN DEL PDF
+        // GENERACIÓN DEL PDF CORREGIDA
         // =========================================================================
         function downloadPDF() {
             const btn = document.getElementById('pdf-btn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = 'Generando archivo...';
             btn.disabled = true;
 
             const element = document.getElementById('pdf-content');
             
-            // Reajustar clases temporales para el PDF para que la tabla quepa perfecta
+            // Reajustar clases temporales para el PDF para evitar cortes
             const originalClasses = element.className;
-            element.className = 'w-full max-w-4xl mx-auto bg-white p-8 md:p-12';
+            // Se quita el overflow, las sombras y redondeos para asegurar captura plana y completa
+            element.className = 'w-full max-w-4xl mx-auto bg-white p-8 pb-12'; 
 
             const opt = {
-                margin:       10,
+                margin:       10, // Margen de 10mm
                 filename:     `Evaluacion_${state.studentId}_${state.studentName.replace(/\s+/g, '_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }, // Evita que corte tarjetas a la mitad
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    scrollY: 0, // CRÍTICO: Fuerza la captura desde arriba sin importar el scroll del usuario
+                    scrollX: 0,
+                    windowWidth: document.documentElement.offsetWidth,
+                    windowHeight: document.documentElement.scrollHeight // Asegura que lea todo el alto
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Descargar Comprobante PDF
-                `;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
                 element.className = originalClasses; // Restaurar estilos
             });
@@ -529,11 +533,7 @@
                 container.appendChild(createResultScreen());
             } else if (state.status === 'teacher') {
                 document.getElementById('header-timer').classList.add('hidden');
-                // Al entrar a la vista profesor, renderizamos la versión que carga desde la nube
-                const teacherDiv = createTeacherDashboard();
-                container.appendChild(teacherDiv);
-                
-                // Cargar los datos después de dibujar la pantalla
+                container.appendChild(createTeacherDashboard());
                 loadTeacherData();
             }
         }
@@ -676,7 +676,7 @@
                 }
 
                 gridHTML += `
-                    <div class="${rowColor} rounded-lg p-3 text-center flex flex-col justify-center items-center h-24 shadow-sm">
+                    <div class="${rowColor} rounded-lg p-3 text-center flex flex-col justify-center items-center h-24 shadow-sm" style="page-break-inside: avoid;">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Preg. ${index + 1}</span>
                         <span class="text-xl mb-1">${iconHTML}</span>
                         <span class="text-sm font-semibold">${statusText}</span>
@@ -714,7 +714,7 @@
                         </div>
                     </div>
 
-                    <div class="text-center mb-10">
+                    <div class="text-center mb-10" style="page-break-inside: avoid;">
                         <div class="inline-flex flex-col items-center justify-center p-8 rounded-full border-8 ${aprobado ? 'border-green-100 bg-green-50' : 'border-red-100 bg-red-50'} w-48 h-48 mb-6">
                             <span class="text-sm text-gray-500 font-bold uppercase tracking-widest mb-1">Calificación</span>
                             <span class="text-5xl font-black ${aprobado ? 'text-green-600' : 'text-red-600'}">${calificacion}</span>
@@ -730,7 +730,7 @@
                         ${termMsg}
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10" style="page-break-inside: avoid;">
                         <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
                             <div class="text-3xl font-black text-blue-600 mb-1">${QUESTIONS.length}</div>
                             <div class="text-xs font-bold text-blue-800 uppercase">Total</div>
@@ -755,7 +755,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-center mt-2 mb-8">
+                <div class="flex justify-center mt-2 mb-8" data-html2canvas-ignore="true">
                     <button id="pdf-btn" onclick="downloadPDF()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Descargar Comprobante PDF
@@ -765,9 +765,6 @@
             return div;
         }
 
-        // =========================================================================
-        // PANEL DOCENTE CON EXTRACCIÓN EN LA NUBE
-        // =========================================================================
         function createTeacherDashboard() {
             const div = document.createElement('div');
             div.className = 'w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-gray-100 p-6 md:p-8';
@@ -777,19 +774,14 @@
                     <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Panel Docente 
-                        <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full ml-2">Sincronización en Nube</span>
+                        <span class="text-sm bg-gray-100 text-gray-800 px-3 py-1 rounded-full ml-2">Datos Locales</span>
                     </h2>
                     <button onclick="exitTeacherMode()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors">
                         Cerrar Panel
                     </button>
                 </div>
 
-                <div id="teacher-loading" class="text-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p class="text-gray-500 font-medium">Conectando con la base de datos (JSONBin)...</p>
-                </div>
-
-                <div id="teacher-content" class="hidden">
+                <div id="teacher-content">
                     <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm mb-6">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -806,7 +798,8 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="flex justify-end">
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm text-gray-500 italic">Nota: Para ver a todos los alumnos que respondieron de forma remota, revisa tu Google Sheets.</p>
                         <button id="btn-export-csv" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-transform transform hover:-translate-y-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Descargar Tabla Local (.csv)
@@ -818,21 +811,12 @@
         }
 
         async function loadTeacherData() {
-            // Como ahora usamos Google Sheets como maestro, el panel docente 
-            // mostrará únicamente los datos respaldados en esta computadora específica.
-            // Para ver el concentrado real de todos los alumnos, abre tu archivo de Google Sheets.
-            
             let dataToShow = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
-
-            // Ocultar carga y mostrar tabla
-            document.getElementById('teacher-loading').classList.add('hidden');
-            document.getElementById('teacher-content').classList.remove('hidden');
-
             const tbody = document.getElementById('teacher-table-body');
             
             if (dataToShow.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">No hay evaluaciones registradas en la base de datos aún.</td></tr>';
-                document.getElementById('btn-export-csv').onclick = () => alert('No hay datos para exportar');
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">No hay evaluaciones registradas en esta computadora aún.</td></tr>';
+                document.getElementById('btn-export-csv').onclick = () => alert('No hay datos locales para exportar');
             } else {
                 let rows = '';
                 dataToShow.forEach(r => {
@@ -852,15 +836,10 @@
                     `;
                 });
                 tbody.innerHTML = rows;
-                
-                // Configurar el botón de exportación pasándole los datos extraídos
                 document.getElementById('btn-export-csv').onclick = () => downloadCSV(dataToShow);
             }
         }
 
-        // =========================================================================
-        // INICIO DE LA APLICACIÓN
-        // =========================================================================
         loadState();
         render();
 
