@@ -720,7 +720,7 @@
                             <span class="text-5xl font-black ${aprobado ? 'text-green-600' : 'text-red-600'}">${calificacion}</span>
                         </div>
                         <h3 class="text-2xl font-bold ${aprobado ? 'text-green-600' : 'text-red-600'} mb-2">
-                            ${aprobado ? '✅ APROBADO' : '❌ NO APROBADO
+                            ${aprobado ? '✅ APROBADO' : '❌ NO APROBADO'}
                         </h3>
                         <p class="text-gray-600 max-w-md mx-auto text-lg">
                             ${aprobado 
@@ -822,7 +822,7 @@
                 dataToShow.forEach(r => {
                     const statusBadge = r.score >= 6.0 
                         ? '<span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200">Aprobado</span>' 
-                        : '<span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">Reprobado</span>';
+                        : '<span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">No Aprobado</span>';
                     let alertIcon = r.reason === 'cheat' ? '<span title="Cerrado por trampa" class="ml-2 text-xl">⚠️</span>' : '';
                     
                     rows += `
