@@ -143,12 +143,10 @@
 
     <script>
         // =========================================================================
-        // CONFIGURACIÓN DE LA NUBE (JSONBIN.IO)
-        // Sustituye estos valores con los que obtengas de tu cuenta de JSONBin
+        // CONFIGURACIÓN DE LA NUBE (GOOGLE SHEETS)
         // =========================================================================
-        const JSONBIN_API_KEY = "$2a$10$TU_API_KEY_AQUI_REEMPLAZAR"; // Tu Master Key
-        const JSONBIN_BIN_ID = "TU_BIN_ID_AQUI_REEMPLAZAR"; // El ID de tu Bin
-        const CLOUD_ENABLED = false; // Cambia a "true" cuando hayas puesto tus claves arriba
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_FSy64Gh-2zUYktSU3mcb-CSSQIV8goSdImu3er9ghrZo0Tg9mC1rf1iJODZo4UAE/exec"; 
+        const CLOUD_ENABLED = true;
 
         // =========================================================================
 
@@ -371,7 +369,7 @@
         }
 
         // =========================================================================
-        // FUNCIÓN MODIFICADA PARA GUARDAR EN LA NUBE Y LOCAL
+        // FUNCIÓN MODIFICADA PARA GUARDAR EN GOOGLE SHEETS Y LOCAL
         // =========================================================================
         async function submitExam(isForced = false) {
             document.getElementById('confirm-modal').classList.add('hidden');
@@ -397,33 +395,25 @@
                 localStorage.setItem(RESULTS_KEY, JSON.stringify(savedResults));
             }
 
-            // 2. Guardar en JSONBin (La Nube) si está activado
+            // 2. Enviar silenciosamente a Google Sheets si está activado
             if (CLOUD_ENABLED && !exists) {
                 try {
-                    // Descargar la lista actual de la nube
-                    let req = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Evita bloqueos de seguridad del navegador del alumno
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            boleta: newResult.id,
+                            nombre: newResult.name,
+                            calificacion: newResult.score,
+                            fecha: newResult.date,
+                            estado: newResult.reason
+                        })
                     });
-                    
-                    if(req.ok) {
-                        let resData = await req.json();
-                        let cloudRecords = resData.record || [];
-                        
-                        // Agregar el nuevo alumno a la lista
-                        cloudRecords.push(newResult);
-                        
-                        // Subir la lista completa actualizada
-                        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': JSONBIN_API_KEY
-                            },
-                            body: JSON.stringify(cloudRecords)
-                        });
-                    }
                 } catch(error) {
-                    console.error("Error al sincronizar con la nube JSONBin", error);
+                    console.error("Error al enviar a la nube", error);
                 }
             }
 
@@ -819,7 +809,7 @@
                     <div class="flex justify-end">
                         <button id="btn-export-csv" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-transform transform hover:-translate-y-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Descargar Tabla en Excel (.csv)
+                            Descargar Tabla Local (.csv)
                         </button>
                     </div>
                 </div>
@@ -828,28 +818,11 @@
         }
 
         async function loadTeacherData() {
-            let dataToShow = [];
-
-            if (CLOUD_ENABLED) {
-                try {
-                    let req = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                    });
-                    if (req.ok) {
-                        let resData = await req.json();
-                        dataToShow = resData.record || [];
-                    } else {
-                        throw new Error("No se pudo leer la nube.");
-                    }
-                } catch(error) {
-                    console.error("Fallo la nube. Cargando locales.", error);
-                    alert("No se pudo conectar a JSONBin. Mostrando únicamente resultados locales.");
-                    dataToShow = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
-                }
-            } else {
-                // Si la nube no está habilitada por el profesor, carga los locales
-                dataToShow = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
-            }
+            // Como ahora usamos Google Sheets como maestro, el panel docente 
+            // mostrará únicamente los datos respaldados en esta computadora específica.
+            // Para ver el concentrado real de todos los alumnos, abre tu archivo de Google Sheets.
+            
+            let dataToShow = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
 
             // Ocultar carga y mostrar tabla
             document.getElementById('teacher-loading').classList.add('hidden');
