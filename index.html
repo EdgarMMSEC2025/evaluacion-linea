@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Librería para generar el PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Librería face-api.js para detección de rostros -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -70,11 +72,21 @@
                 </div>
                 <h1 class="font-bold text-lg md:text-xl text-gray-800 hidden md:block">Plataforma de Evaluación</h1>
             </div>
-            <div id="header-timer" class="hidden flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-mono text-lg font-semibold text-gray-700 border border-gray-200 shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span id="timer-display">45:00</span>
+            
+            <!-- Contenedor central superior: Video de la cámara y Temporizador -->
+            <div class="flex items-center gap-4">
+                <!-- Video de supervisión por cámara (Proctoring) -->
+                <div id="webcam-container" class="hidden relative w-16 h-12 bg-black rounded-lg overflow-hidden shadow border border-gray-300">
+                    <video id="proctor-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                    <div id="webcam-status" class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full m-1 border border-white" title="Cámara inactiva"></div>
+                </div>
+
+                <div id="header-timer" class="hidden flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-mono text-lg font-semibold text-gray-700 border border-gray-200 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="timer-display">45:00</span>
+                </div>
             </div>
         </div>
     </header>
@@ -89,7 +101,7 @@
         </div>
     </footer>
 
-    <!-- Modal de Advertencia (Anti-Cheat) -->
+    <!-- Modal de Advertencia (Anti-Cheat / Proctoring) -->
     <div id="warning-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
             <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -98,7 +110,7 @@
                 </svg>
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-2">Advertencia de Seguridad</h3>
-            <p class="text-gray-600 mb-6">
+            <p id="warning-text" class="text-gray-600 mb-6">
                 Ha salido de la pantalla de la evaluación (cambio de pestaña, minimizó el navegador o salió de pantalla completa). 
                 <br><br>
                 <strong class="text-red-600">Si vuelve a abandonar la pantalla, la evaluación será finalizada automáticamente.</strong>
@@ -235,6 +247,9 @@
         };
 
         let timerInterval = null;
+        let webcamStream = null;
+        let faceDetectionInterval = null;
+        let faceMissingCount = 0;
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -244,7 +259,6 @@
         }
 
         function saveState() {
-            // Solo guardamos si NO ha terminado. Si ya terminó, queremos que se borre al refrescar.
             if(state.status !== 'finished') {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             }
@@ -255,26 +269,33 @@
         document.addEventListener('cut', (e) => e.preventDefault());
 
         function handleVisibilityChange() {
-            if (document.hidden && state.status === 'playing') registerCheatWarning();
+            if (document.hidden && state.status === 'playing') registerCheatWarning('Ha salido de la pantalla (cambio de pestaña o minimización).');
         }
         function handleWindowBlur() {
-            if (state.status === 'playing') registerCheatWarning();
+            if (state.status === 'playing') registerCheatWarning('La ventana ha perdido el foco.');
         }
         function handleFullscreenChange() {
-            if (!document.fullscreenElement && state.status === 'playing') registerCheatWarning();
+            if (!document.fullscreenElement && state.status === 'playing') registerCheatWarning('Ha salido del modo de pantalla completa.');
         }
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleWindowBlur);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
 
-        function registerCheatWarning() {
+        function registerCheatWarning(reasonMsg) {
             if(document.getElementById('warning-modal').classList.contains('hidden') === false) return;
             state.warnings += 1;
             saveState();
+            
+            const textElement = document.getElementById('warning-text');
+            if (textElement) {
+                textElement.innerHTML = `Motivo: ${reasonMsg} <br><br> <strong class="text-red-600">Si vuelve a abandonar la pantalla, la evaluación será finalizada automáticamente.</strong>`;
+            }
+
             if (state.warnings === 1) {
                 document.getElementById('warning-modal').classList.remove('hidden');
             } else if (state.warnings >= 2) {
                 state.terminationReason = 'cheat';
+                stopWebcam();
                 submitExam(true);
             }
         }
@@ -282,6 +303,84 @@
         async function resumeExam() {
             document.getElementById('warning-modal').classList.add('hidden');
             try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (err) {}
+        }
+
+        // =========================================================================
+        // PROCTORING: WEBCAM Y DETECCIÓN DE ROSTROS (FACE-API)
+        // =========================================================================
+        async function initWebcam() {
+            const videoElement = document.getElementById('proctor-video');
+            const container = document.getElementById('webcam-container');
+            const statusIndicator = document.getElementById('webcam-status');
+
+            if (!videoElement) return;
+
+            try {
+                container.classList.remove('hidden');
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                videoElement.srcObject = webcamStream;
+                statusIndicator.className = 'absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full m-1 border border-white';
+                statusIndicator.title = 'Cámara activa y supervisando';
+
+                // Cargar modelos de face-api si están disponibles o iniciar bucle de análisis
+                startFaceDetectionLoop(videoElement);
+            } catch (err) {
+                console.warn("No se pudo iniciar la webcam:", err);
+                statusIndicator.className = 'absolute bottom-0 right-0 w-3 h-3 bg-amber-500 rounded-full m-1 border border-white';
+                statusIndicator.title = 'Cámara no disponible o permiso denegado';
+            }
+        }
+
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            if (faceDetectionInterval) {
+                clearInterval(faceDetectionInterval);
+                faceDetectionInterval = null;
+            }
+            const container = document.getElementById('webcam-container');
+            if(container) container.classList.add('hidden');
+        }
+
+        function startFaceDetectionLoop(videoElement) {
+            // Verificamos si faceapi cargó correctamente
+            if (typeof faceapi === 'undefined') return;
+
+            // Cargamos modelos ligeros desde CDN público de face-api
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+            
+            Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+            ]).then(() => {
+                faceDetectionInterval = setInterval(async () => {
+                    if (state.status !== 'playing') return;
+                    try {
+                        const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions());
+                        const statusIndicator = document.getElementById('webcam-status');
+
+                        if (detections.length === 0) {
+                            faceMissingCount++;
+                            if (statusIndicator) statusIndicator.style.backgroundColor = 'orange';
+                            if (faceMissingCount >= 3) { // 3 revisiones consecutivas sin rostro (~9 segundos)
+                                faceMissingCount = 0;
+                                registerCheatWarning('No se detecta un rostro frente a la pantalla.');
+                            }
+                        } else if (detections.length > 1) {
+                            if (statusIndicator) statusIndicator.style.backgroundColor = 'purple';
+                            registerCheatWarning('Se detectó más de una persona frente al dispositivo.');
+                        } else {
+                            faceMissingCount = 0;
+                            if (statusIndicator) statusIndicator.style.backgroundColor = '#22c55e'; // verde
+                        }
+                    } catch (e) {
+                        console.error("Error en detección facial:", e);
+                    }
+                }, 3000); // Revisa cada 3 segundos
+            }).catch(err => {
+                console.log("Modelos de IA facial no cargados, continuando examen con monitoreo básico de video.");
+            });
         }
 
         function startTimer() {
@@ -295,6 +394,7 @@
                 if (state.timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     state.terminationReason = 'timeout';
+                    stopWebcam();
                     submitExam(true);
                 }
             }, 1000);
@@ -341,6 +441,7 @@
             
             try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch(e) {}
             render();
+            initWebcam();
         }
 
         function selectAnswer(qId, optId) {
@@ -372,6 +473,7 @@
 
         async function submitExam(isForced = false) {
             document.getElementById('confirm-modal').classList.add('hidden');
+            stopWebcam();
             
             let correctas = 0;
             QUESTIONS.forEach(q => { if (state.answers[q.id] === q.correct) correctas++; });
@@ -487,23 +589,21 @@
 
             const element = document.getElementById('pdf-content');
             
-            // Reajustar clases temporales para el PDF para evitar cortes
             const originalClasses = element.className;
-            // Se quita el overflow, las sombras y redondeos para asegurar captura plana y completa
             element.className = 'w-full max-w-4xl mx-auto bg-white p-8 pb-12'; 
 
             const opt = {
-                margin:       10, // Margen de 10mm
+                margin:       10, 
                 filename:     `Evaluacion_${state.studentId}_${state.studentName.replace(/\s+/g, '_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }, // Evita que corte tarjetas a la mitad
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }, 
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true,
-                    scrollY: 0, // CRÍTICO: Fuerza la captura desde arriba sin importar el scroll del usuario
+                    scrollY: 0, 
                     scrollX: 0,
                     windowWidth: document.documentElement.offsetWidth,
-                    windowHeight: document.documentElement.scrollHeight // Asegura que lea todo el alto
+                    windowHeight: document.documentElement.scrollHeight 
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
@@ -511,7 +611,7 @@
             html2pdf().set(opt).from(element).save().then(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                element.className = originalClasses; // Restaurar estilos
+                element.className = originalClasses; 
             });
         }
 
@@ -556,12 +656,12 @@
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Instrucciones Generales
+                            Instrucciones Generales y Videovigilancia
                         </h3>
                         <ul class="text-gray-600 space-y-2 text-sm ml-7 list-disc">
-                            <li>La evaluación consta de <strong>30 preguntas</strong> de opción múltiple.</li>
-                            <li>Tienes <strong>45 minutos</strong> para completarla.</li>
-                            <li><strong>Seguridad:</strong> Se activará el modo de pantalla completa. Si sales de la pantalla, minimizas o cambias de pestaña, recibirás una advertencia. <strong class="text-red-500">A la segunda advertencia, el examen se enviará y cerrará automáticamente.</strong></li>
+                            <li>La evaluación consta de <strong>30 preguntas</strong> de opción múltiple (45 minutos).</li>
+                            <li><strong>Supervisión por cámara:</strong> Se activará la cámara web para supervisar la presencia de una sola persona frente a la pantalla.</li>
+                            <li><strong>Seguridad:</strong> Si sales de la pantalla completa o cambias de pestaña, recibirás una advertencia. <strong class="text-red-500">A la segunda advertencia, el examen se enviará automáticamente.</strong></li>
                         </ul>
                     </div>
                     <div class="mb-4">
@@ -579,7 +679,7 @@
                         </p>
                     </div>
                     <button id="btn-start" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition-all duration-200" onclick="startExam()">
-                        Iniciar Evaluación
+                        Iniciar Evaluación y Cámara
                     </button>
                 </div>
             `;
@@ -823,7 +923,7 @@
                     const statusBadge = r.score >= 6.0 
                         ? '<span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200">Aprobado</span>' 
                         : '<span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">No Aprobado</span>';
-                    let alertIcon = r.reason === 'cheat' ? '<span title="Cerrado por trampa" class="ml-2 text-xl">⚠️</span>' : '';
+                    let alertIcon = r.reason === 'cheat' ? '<span title="Cerrado por trampa o incidencias de cámara" class="ml-2 text-xl">⚠️</span>' : '';
                     
                     rows += `
                         <tr class="border-b hover:bg-gray-50 transition-colors">
