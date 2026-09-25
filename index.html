@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluación en Línea: Evolución del Trabajo</title>
+    <title>1ra Evaluación Departamental: Evolución del Trabajo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Librería para generar el PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Librería face-api.js para detección de rostros -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -15,7 +17,6 @@
             user-select: none; /* Deshabilitar selección de texto */
         }
         
-        /* Animaciones suaves */
         .fade-in {
             animation: fadeIn 0.3s ease-in-out;
         }
@@ -25,7 +26,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilo personalizado para scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -40,7 +40,6 @@
             background: #94a3b8; 
         }
 
-        /* Radio button personalizado */
         .option-card input[type="radio"]:checked + div {
             border-color: #3b82f6;
             background-color: #eff6ff;
@@ -68,19 +67,28 @@
                 <div onclick="openTeacherLogin()" class="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-xl shadow-md cursor-pointer hover:bg-blue-700 transition-colors" title="Acceso a Profesores">
                     Ev
                 </div>
-                <h1 class="font-bold text-lg md:text-xl text-gray-800 hidden md:block">Plataforma de Evaluación</h1>
+                <h1 class="font-bold text-lg md:text-xl text-gray-800 hidden md:block">1ra Evaluación Departamental</h1>
             </div>
-            <div id="header-timer" class="hidden flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-mono text-lg font-semibold text-gray-700 border border-gray-200 shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span id="timer-display">45:00</span>
+            
+            <div class="flex items-center gap-4">
+                <!-- Video de supervisión por cámara (Proctoring) -->
+                <div id="webcam-container" class="hidden relative w-16 h-12 bg-black rounded-lg overflow-hidden shadow border border-gray-300">
+                    <video id="proctor-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                    <div id="webcam-status" class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full m-1 border border-white" title="Cámara inactiva"></div>
+                </div>
+
+                <div id="header-timer" class="hidden flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-mono text-lg font-semibold text-gray-700 border border-gray-200 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="timer-display">45:00</span>
+                </div>
             </div>
         </div>
     </header>
 
     <main id="app-container" class="flex-grow flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full">
-        <!-- El contenido dinámico se renderizará aquí -->
+        <!-- Contenido dinámico -->
     </main>
 
     <footer class="bg-white border-t border-gray-200 mt-auto py-6" data-html2canvas-ignore="true">
@@ -89,7 +97,7 @@
         </div>
     </footer>
 
-    <!-- Modal de Advertencia (Anti-Cheat) -->
+    <!-- Modal de Advertencia (Anti-Cheat / Proctoring - 3 Strikes) -->
     <div id="warning-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
             <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -98,10 +106,10 @@
                 </svg>
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-2">Advertencia de Seguridad</h3>
-            <p class="text-gray-600 mb-6">
-                Ha salido de la pantalla de la evaluación (cambio de pestaña, minimizó el navegador o salió de pantalla completa). 
+            <p id="warning-text" class="text-gray-600 mb-6">
+                Ha salido de la pantalla de la evaluación (cambio de pestaña, minimizó el navegador o se detectó más de una persona). 
                 <br><br>
-                <strong class="text-red-600">Si vuelve a abandonar la pantalla, la evaluación será finalizada automáticamente.</strong>
+                <strong class="text-red-600">Al acumular 3 advertencias, la evaluación se finalizará automáticamente.</strong>
             </p>
             <button onclick="resumeExam()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl transition-colors">
                 Entendido, regresar a la evaluación
@@ -131,7 +139,7 @@
     <div id="teacher-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all">
             <h3 class="text-2xl font-bold text-gray-900 mb-4">Acceso Docente</h3>
-            <p class="text-gray-600 mb-4 text-sm">Ingrese la clave para acceder al concentrado de calificaciones locales.</p>
+            <p class="text-gray-600 mb-4 text-sm">Ingrese la clave para acceder al concentrado de calificaciones.</p>
             <input type="password" id="teacher-password" class="w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-50 border outline-none mb-4 text-center text-lg tracking-widest" placeholder="Contraseña">
             <p id="teacher-error" class="text-red-500 text-sm hidden mb-4 font-semibold">Contraseña incorrecta</p>
             <div class="flex gap-3">
@@ -218,7 +226,7 @@
             { id: 30, text: "Según las proyecciones laborales para 2026, ¿qué busca el talento actual además de la compensación económica?", options: [ { id: "A", text: "Supervisión digital constante e incentivos individuales." }, { id: "B", text: "Sentido, equilibrio, coherencia y espacios donde prosperar sin sacrificar su salud física o mental." }, { id: "C", text: "Extensión de la jornada laboral a cambio de bonificaciones." }, { id: "D", text: "Un entorno estrictamente competitivo y jerárquico." } ], correct: "B" }
         ];
 
-        const STORAGE_KEY = 'evaluacion_estado_v1';
+        const STORAGE_KEY = 'evaluacion_estado_v2';
         const RESULTS_KEY = 'evaluacion_resultados_locales'; 
         const TEACHER_PASSWORD = 'Motiva$ion2026+'; 
         const EXAM_DURATION_SECONDS = 45 * 60; 
@@ -235,6 +243,9 @@
         };
 
         let timerInterval = null;
+        let webcamStream = null;
+        let faceDetectionInterval = null;
+        let faceMissingCount = 0;
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -244,7 +255,6 @@
         }
 
         function saveState() {
-            // Solo guardamos si NO ha terminado. Si ya terminó, queremos que se borre al refrescar.
             if(state.status !== 'finished') {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             }
@@ -255,26 +265,33 @@
         document.addEventListener('cut', (e) => e.preventDefault());
 
         function handleVisibilityChange() {
-            if (document.hidden && state.status === 'playing') registerCheatWarning();
+            if (document.hidden && state.status === 'playing') registerCheatWarning('Ha salido de la pantalla (cambio de pestaña o minimización).');
         }
         function handleWindowBlur() {
-            if (state.status === 'playing') registerCheatWarning();
+            if (state.status === 'playing') registerCheatWarning('La ventana ha perdido el foco.');
         }
         function handleFullscreenChange() {
-            if (!document.fullscreenElement && state.status === 'playing') registerCheatWarning();
+            if (!document.fullscreenElement && state.status === 'playing') registerCheatWarning('Ha salido del modo de pantalla completa.');
         }
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleWindowBlur);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
 
-        function registerCheatWarning() {
-            if(document.getElementById('warning-modal').classList.contains('hidden') === false) return;
+        function registerCheatWarning(reasonMsg) {
+            if(!document.getElementById('warning-modal').classList.contains('hidden')) return;
             state.warnings += 1;
             saveState();
-            if (state.warnings === 1) {
+            
+            const textElement = document.getElementById('warning-text');
+            if (textElement) {
+                textElement.innerHTML = `Motivo: ${reasonMsg} <br><br> <strong class="text-red-600">Advertencia ${state.warnings} de 3. Al acumular 3 advertencias, la evaluación se finalizará automáticamente.</strong>`;
+            }
+
+            if (state.warnings < 3) {
                 document.getElementById('warning-modal').classList.remove('hidden');
-            } else if (state.warnings >= 2) {
+            } else {
                 state.terminationReason = 'cheat';
+                stopWebcam();
                 submitExam(true);
             }
         }
@@ -282,6 +299,81 @@
         async function resumeExam() {
             document.getElementById('warning-modal').classList.add('hidden');
             try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (err) {}
+        }
+
+        // =========================================================================
+        // PROCTORING: WEBCAM Y DETECCIÓN DE ROSTROS (FACE-API)
+        // =========================================================================
+        async function initWebcam() {
+            const videoElement = document.getElementById('proctor-video');
+            const container = document.getElementById('webcam-container');
+            const statusIndicator = document.getElementById('webcam-status');
+
+            if (!videoElement) return;
+
+            try {
+                container.classList.remove('hidden');
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                videoElement.srcObject = webcamStream;
+                statusIndicator.className = 'absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full m-1 border border-white';
+                statusIndicator.title = 'Cámara activa y supervisando';
+
+                startFaceDetectionLoop(videoElement);
+            } catch (err) {
+                console.warn("No se pudo iniciar la webcam:", err);
+                statusIndicator.className = 'absolute bottom-0 right-0 w-3 h-3 bg-amber-500 rounded-full m-1 border border-white';
+                statusIndicator.title = 'Cámara no disponible o permiso denegado';
+            }
+        }
+
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            if (faceDetectionInterval) {
+                clearInterval(faceDetectionInterval);
+                faceDetectionInterval = null;
+            }
+            const container = document.getElementById('webcam-container');
+            if(container) container.classList.add('hidden');
+        }
+
+        function startFaceDetectionLoop(videoElement) {
+            if (typeof faceapi === 'undefined') return;
+
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+            
+            Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+            ]).then(() => {
+                faceDetectionInterval = setInterval(async () => {
+                    if (state.status !== 'playing') return;
+                    try {
+                        const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions());
+                        const statusIndicator = document.getElementById('webcam-status');
+
+                        if (detections.length === 0) {
+                            faceMissingCount++;
+                            if (statusIndicator) statusIndicator.style.backgroundColor = 'orange';
+                            if (faceMissingCount >= 3) { 
+                                faceMissingCount = 0;
+                                registerCheatWarning('No se detecta un rostro frente a la pantalla.');
+                            }
+                        } else if (detections.length > 1) {
+                            if (statusIndicator) statusIndicator.style.backgroundColor = 'purple';
+                            registerCheatWarning('Se detectó más de una persona frente al dispositivo.');
+                        } else {
+                            faceMissingCount = 0;
+                            if (statusIndicator) statusIndicator.style.backgroundColor = '#22c55e';
+                        }
+                    } catch (e) {
+                        console.error("Error en detección facial:", e);
+                    }
+                }, 3000);
+            }).catch(err => {
+                console.log("Modelos de IA facial no cargados, continuando examen con monitoreo básico de video.");
+            });
         }
 
         function startTimer() {
@@ -295,6 +387,7 @@
                 if (state.timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     state.terminationReason = 'timeout';
+                    stopWebcam();
                     submitExam(true);
                 }
             }, 1000);
@@ -341,6 +434,7 @@
             
             try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch(e) {}
             render();
+            initWebcam();
         }
 
         function selectAnswer(qId, optId) {
@@ -372,6 +466,7 @@
 
         async function submitExam(isForced = false) {
             document.getElementById('confirm-modal').classList.add('hidden');
+            stopWebcam();
             
             let correctas = 0;
             QUESTIONS.forEach(q => { if (state.answers[q.id] === q.correct) correctas++; });
@@ -385,7 +480,6 @@
                 reason: state.terminationReason || 'Normal'
             };
 
-            // Guardar local (Para panel de profesor en esta PC)
             const savedResults = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
             const exists = savedResults.find(r => r.id === newResult.id);
             if(!exists) {
@@ -393,14 +487,14 @@
                 localStorage.setItem(RESULTS_KEY, JSON.stringify(savedResults));
             }
 
-            // Enviar a Google Sheets
+            // Sincronización robusta con Google Sheets (Content-Type text/plain para evitar bloqueos CORS)
             if (CLOUD_ENABLED && !exists) {
                 try {
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'text/plain',
                         },
                         body: JSON.stringify({
                             boleta: newResult.id,
@@ -409,15 +503,15 @@
                             fecha: newResult.date,
                             estado: newResult.reason
                         })
-                    });
+                    }).catch(err => console.error("Error al enviar a la nube:", err));
                 } catch(error) {
-                    console.error("Error al enviar a la nube", error);
+                    console.error("Error crítico en fetch", error);
                 }
             }
 
             state.status = 'finished';
             
-            // ELIMINAR ESTADO LOCAL PARA QUE AL RECARGAR EMPIECE DE CERO
+            // Borrar almacenamiento temporal para que al recargar comience de cero
             localStorage.removeItem(STORAGE_KEY);
 
             if (document.fullscreenElement) {
@@ -470,15 +564,12 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Resultados_Evolucion_Trabajo.csv"); 
+            link.setAttribute("download", "Resultados_Evaluacion.csv"); 
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // =========================================================================
-        // GENERACIÓN DEL PDF CORREGIDA
-        // =========================================================================
         function downloadPDF() {
             const btn = document.getElementById('pdf-btn');
             const originalText = btn.innerHTML;
@@ -486,24 +577,21 @@
             btn.disabled = true;
 
             const element = document.getElementById('pdf-content');
-            
-            // Reajustar clases temporales para el PDF para evitar cortes
             const originalClasses = element.className;
-            // Se quita el overflow, las sombras y redondeos para asegurar captura plana y completa
             element.className = 'w-full max-w-4xl mx-auto bg-white p-8 pb-12'; 
 
             const opt = {
-                margin:       10, // Margen de 10mm
+                margin:       10, 
                 filename:     `Evaluacion_${state.studentId}_${state.studentName.replace(/\s+/g, '_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }, // Evita que corte tarjetas a la mitad
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }, 
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true,
-                    scrollY: 0, // CRÍTICO: Fuerza la captura desde arriba sin importar el scroll del usuario
+                    scrollY: 0, 
                     scrollX: 0,
                     windowWidth: document.documentElement.offsetWidth,
-                    windowHeight: document.documentElement.scrollHeight // Asegura que lea todo el alto
+                    windowHeight: document.documentElement.scrollHeight 
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
@@ -511,13 +599,10 @@
             html2pdf().set(opt).from(element).save().then(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                element.className = originalClasses; // Restaurar estilos
+                element.className = originalClasses; 
             });
         }
 
-        // =========================================================================
-        // RENDERIZADO DE PANTALLAS
-        // =========================================================================
         function render() {
             const container = document.getElementById('app-container');
             container.innerHTML = '';
@@ -556,12 +641,12 @@
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Instrucciones Generales
+                            Instrucciones Generales y Videovigilancia
                         </h3>
                         <ul class="text-gray-600 space-y-2 text-sm ml-7 list-disc">
-                            <li>La evaluación consta de <strong>30 preguntas</strong> de opción múltiple.</li>
-                            <li>Tienes <strong>45 minutos</strong> para completarla.</li>
-                            <li><strong>Seguridad:</strong> Se activará el modo de pantalla completa. Si sales de la pantalla, minimizas o cambias de pestaña, recibirás una advertencia. <strong class="text-red-500">A la segunda advertencia, el examen se enviará y cerrará automáticamente.</strong></li>
+                            <li>La evaluación consta de <strong>30 preguntas</strong> de opción múltiple (45 minutos).</li>
+                            <li><strong>Supervisión por cámara:</strong> Se activará la cámara web para supervisar la presencia de una sola persona frente a la pantalla.</li>
+                            <li><strong>Seguridad:</strong> Si sales de la pantalla completa o cambias de pestaña, recibirás una advertencia. <strong class="text-red-500">A la tercera advertencia, el examen se enviará automáticamente.</strong></li>
                         </ul>
                     </div>
                     <div class="mb-4">
@@ -579,7 +664,7 @@
                         </p>
                     </div>
                     <button id="btn-start" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition-all duration-200" onclick="startExam()">
-                        Iniciar Evaluación
+                        Iniciar Evaluación y Cámara
                     </button>
                 </div>
             `;
@@ -649,7 +734,6 @@
             let correctas = 0;
             let incorrectas = 0;
             let sinResponder = 0;
-
             let gridHTML = '';
 
             QUESTIONS.forEach((q, index) => {
@@ -689,7 +773,7 @@
             
             let termMsg = '';
             if (state.terminationReason === 'cheat') {
-                termMsg = `<div class="mt-4 p-4 bg-red-100 text-red-800 rounded-xl font-bold border border-red-200 flex items-center justify-center gap-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Evaluación finalizada por detección de actividad inusual.</div>`;
+                termMsg = `<div class="mt-4 p-4 bg-red-100 text-red-800 rounded-xl font-bold border border-red-200 flex items-center justify-center gap-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Evaluación finalizada por superar el límite de advertencias.</div>`;
             } else if (state.terminationReason === 'timeout') {
                 termMsg = `<div class="mt-4 p-4 bg-yellow-100 text-yellow-800 rounded-xl font-bold border border-yellow-200 flex items-center justify-center gap-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Evaluación finalizada por tiempo agotado.</div>`;
             }
@@ -698,7 +782,7 @@
                 <div id="pdf-content" class="w-full bg-white rounded-2xl shadow-xl overflow-hidden p-6 md:p-8">
                     <div class="text-center mb-8 border-b border-gray-200 pb-6">
                         <h2 class="text-3xl font-bold text-gray-800 mb-2">Comprobante de Resultados</h2>
-                        <p class="text-gray-500">Evaluación: Evolución del Trabajo y Transformación Tecnológica</p>
+                        <p class="text-gray-500">1ra Evaluación Departamental: Evolución del Trabajo y Transformación Tecnológica</p>
                     </div>
 
                     <div class="bg-gray-50 rounded-xl p-6 mb-8 border border-gray-200">
@@ -799,7 +883,7 @@
                         </table>
                     </div>
                     <div class="flex justify-between items-center">
-                        <p class="text-sm text-gray-500 italic">Nota: Para ver a todos los alumnos que respondieron de forma remota, revisa tu Google Sheets.</p>
+                        <p class="text-sm text-gray-500 italic">Nota: Para ver a todos los alumnos remotos, consulta tu Google Sheets.</p>
                         <button id="btn-export-csv" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-transform transform hover:-translate-y-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Descargar Tabla Local (.csv)
@@ -823,7 +907,7 @@
                     const statusBadge = r.score >= 6.0 
                         ? '<span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200">Aprobado</span>' 
                         : '<span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">No Aprobado</span>';
-                    let alertIcon = r.reason === 'cheat' ? '<span title="Cerrado por trampa" class="ml-2 text-xl">⚠️</span>' : '';
+                    let alertIcon = r.reason === 'cheat' ? '<span title="Cerrado por trampa o incidencias" class="ml-2 text-xl">⚠️</span>' : '';
                     
                     rows += `
                         <tr class="border-b hover:bg-gray-50 transition-colors">
