@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3ra Evaluación Departamental | Plataforma Institucional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Paleta Institucional: Guinda (#6B1D3A), Azul (#1E3A8A), Verde (#065F46), Blanco y Negro */
+        .bg-guinda { background-color: #6B1D3A; }
+        .hover-bg-guinda:hover { background-color: #52142b; }
+        .text-guinda { color: #6B1D3A; }
+        .border-guinda { border-color: #6B1D3A; }
+        .bg-azul-inst { background-color: #1E3A8A; }
+        .hover-bg-azul-inst:hover { background-color: #172554; }
+        .text-azul-inst { color: #1E3A8A; }
+        .bg-verde-inst { background-color: #065F46; }
+        .hover-bg-verde-inst:hover { background-color: #064E3B; }
+        .text-verde-inst { color: #065F46; }
+
+        .option-card input[type="radio"]:checked + div {
+            border-color: #1E3A8A;
+            background-color: #eff6ff;
+        }
+        .option-card input[type="radio"]:checked + div .radio-circle {
+            border-color: #1E3A8A;
+            background-color: #1E3A8A;
+        }
+        .option-card input[type="radio"]:checked + div .radio-circle::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            margin: 3px auto;
+        }
+    </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col" oncontextmenu="return false;">
+
+    <!-- Encabezado Institucional Negro y Guinda -->
+    <header class="bg-slate-950 text-white shadow-md sticky top-0 z-40 border-b-4 border-guinda" data-html2canvas-ignore="true">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div onclick="openTeacherLogin()" class="w-10 h-10 bg-guinda text-white rounded-lg flex items-center justify-center font-extrabold text-lg shadow cursor-pointer hover-bg-guinda transition-colors border border-white/20" title="Acceso Docente">
+                    Ev
+                </div>
+                <div>
+                    <h1 class="font-bold text-base md:text-lg tracking-tight text-white">3ra Evaluación Departamental</h1>
+                    <p class="text-xs text-slate-300 hidden sm:block">Plataforma Institucional Segura • M. en E. Edgar Maldonado Mosqueda</p>
+                </div>
+            </div>
+            <div id="header-timer" class="hidden flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full font-mono text-base font-bold text-white border border-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer-display">10:00</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container" class="flex-grow flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full"></main>
+
+    <footer class="bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto py-5" data-html2canvas-ignore="true">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs md:text-sm">
+            <p class="font-semibold text-white">Evaluación creada por M. en E. Edgar Maldonado Mosqueda</p>
+            <p class="text-slate-400 mt-1">&copy; 2026 Evaluación en Línea Segura. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Modal de Advertencia Anti-Abandono (3ra salida finaliza) -->
+    <div id="warning-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border-t-8 border-guinda">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-guinda" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Advertencia de Seguridad (<span id="warning-count-text">1</span> de 2)</h3>
+            <p class="text-slate-600 text-sm mb-6 leading-relaxed">
+                Ha salido de la pantalla de evaluación (cambio de pestaña, minimización o salida de pantalla completa).
+                <br><br>
+                <strong class="text-guinda">A la tercera salida de pantalla, la evaluación se finalizará y enviará automáticamente.</strong>
+            </p>
+            <button onclick="resumeExam()" class="w-full bg-guinda hover-bg-guinda text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                Entendido, regresar a la evaluación
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Envío -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border-t-8 border-azul-inst">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">¿Enviar evaluación?</h3>
+            <p class="text-slate-600 text-sm mb-6">
+                Estás a punto de enviar tus respuestas al servidor para calificación. Una vez enviadas, no podrás realizar cambios.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-xl transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="submitExam(false)" class="flex-1 bg-verde-inst hover-bg-verde-inst text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                    Sí, enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Acceso Docente -->
+    <div id="teacher-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border-t-8 border-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Panel Docente</h3>
+            <p class="text-slate-600 mb-4 text-sm">Ingrese la clave institucional para consultar los resultados registrados en el servidor.</p>
+            <input type="password" id="teacher-password" class="w-full border-slate-300 rounded-xl p-3 bg-slate-50 border outline-none mb-4 text-center text-lg tracking-widest focus:border-azul-inst" placeholder="Contraseña">
+            <p id="teacher-error" class="text-red-600 text-sm hidden mb-4 font-semibold">Contraseña incorrecta o error de conexión.</p>
+            <div class="flex gap-3">
+                <button onclick="closeTeacherLogin()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-xl transition-colors">Cancelar</button>
+                <button id="btn-teacher-login" onclick="verifyTeacherLogin()" class="flex-1 bg-slate-950 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition-colors">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // CONFIGURACIÓN DE CONEXIÓN AL SERVIDOR (GOOGLE APPS SCRIPT)
+        // =========================================================================
+        const GOOGLE_SCRIPT_URL = "PEGA_AQUI_TU_NUEVA_URL_DE_APPS_SCRIPT";
+        // =========================================================================
+
+        // Solo nombres públicos para el selector (sin boletas ni respuestas expuestas)
+        const STUDENT_NAMES = [
+            "AGUILAR HERNANDEZ ANA HELENA",
+            "ANZURES ZAMORA JOSE MIGUEL",
+            "AVILA TABOADA DANIEL",
+            "CASTILLO ROMERO ALAN",
+            "DIAZ AGUILAR VALERIA",
+            "ESPIDIO GUADARRAMA JOSE ALBERTO",
+            "ESPINOSA MARTINEZ ESTHER CAROLINA",
+            "FLORES VALDEZ RASCHELLE",
+            "GOMEZ MENDEZ MARIA FERNANDA",
+            "HERNANDEZ VILLEGAS KARLA VANESSA",
+            "LARA AMARO ISRAEL",
+            "MALDONADO SALAS YAEL ORLANDO",
+            "MARTINEZ MENDOZA MICHEL YANETH",
+            "MENDOZA MARTINEZ MELANY",
+            "MILLAN ENCISO ANELIZ XIMENA",
+            "ORNELAS VALENCIA DHARANA",
+            "PEÑALOZA LOPEZ JACQUELINE AIMEE",
+            "PORTILLO VALENCIA URIEL EMMANUEL",
+            "RAMIREZ AGUSTIN JOSE LUIS",
+            "REYES NUÑEZ ZAIRA VANESSA",
+            "RUIZ SANTIESTEBAN XIMENA",
+            "SANCHEZ HERNANDEZ AILYN GUADALUPE",
+            "SOL VEGA DANIELA ITZEL",
+            "TAVARES MORALES JAIRO",
+            "TENIZA PEREZ CANDY SARAI",
+            "URBINA MARTINEZ EDUARDO",
+            "VARELA MARQUEZ SAMANTHA",
+            "VELAZQUEZ RIVAS ANGEL DAVID"
+        ];
+
+        // Banco de preguntas (SIN claves de respuesta en el cliente)
+        const QUESTIONS = [
+            { id: 1, text: "¿Cuál es la principal característica de un líder con enfoque de coaching?", options: [ { id: "A", text: "Controla todas las decisiones del equipo para evitar errores." }, { id: "B", text: "Promueve el desarrollo del potencial de las personas mediante preguntas, acompañamiento y retroalimentación." }, { id: "C", text: "Se enfoca exclusivamente en supervisar resultados." }, { id: "D", text: "Evita delegar responsabilidades importantes." } ] },
+            { id: 2, text: "Según la dinámica de grupos, ¿cuál es el propósito del principio de “reducción de la intimidación”?", options: [ { id: "A", text: "Incrementar la competencia entre los integrantes." }, { id: "B", text: "Eliminar completamente la figura del líder." }, { id: "C", text: "Disminuir tensiones e inhibiciones para favorecer la participación activa." }, { id: "D", text: "Asignar tareas idénticas a todos los miembros." } ] },
+            { id: 3, text: "De acuerdo con David McClelland, ¿qué necesidad impulsa principalmente la búsqueda de relaciones interpersonales positivas y de cooperación?", options: [ { id: "A", text: "Necesidad de logro." }, { id: "B", text: "Necesidad de poder." }, { id: "C", text: "Necesidad de afiliación." }, { id: "D", text: "Necesidad de control." } ] },
+            { id: 4, text: "Una persona justifica una conducta inapropiada inventando explicaciones lógicas para no reconocer su verdadero motivo de actuación. ¿Qué mecanismo de defensa está utilizando?", options: [ { id: "A", text: "Regresión." }, { id: "B", text: "Formación reactiva." }, { id: "C", text: "Negativismo." }, { id: "D", text: "Racionalización." } ] },
+            { id: 5, text: "Según Leon Festinger, la disonancia cognoscitiva se refiere a:", options: [ { id: "A", text: "Un estado de relajación total frente a los problemas." }, { id: "B", text: "El malestar que surge cuando existen contradicciones entre creencias y conductas." }, { id: "C", text: "La incapacidad para tomar decisiones importantes." }, { id: "D", text: "La pérdida temporal de la memoria." } ] },
+            { id: 6, text: "¿Cuál de las siguientes situaciones representa una respuesta adaptativa ante la frustración?", options: [ { id: "A", text: "Agredir verbalmente a otras personas." }, { id: "B", text: "Ignorar permanentemente el problema." }, { id: "C", text: "Analizar alternativas de solución y ajustar expectativas." }, { id: "D", text: "Culpar a otros por cualquier dificultad." } ] },
+            { id: 7, text: "Según el Modelo de Negociación de Harvard, los acuerdos más duraderos se logran cuando las partes:", options: [ { id: "A", text: "Defienden rígidamente sus posiciones." }, { id: "B", text: "Se concentran en sus intereses y necesidades subyacentes." }, { id: "C", text: "Imponen sus demandas mediante la autoridad." }, { id: "D", text: "Evitan discutir los desacuerdos." } ] },
+            { id: 8, text: "¿Cuál es la diferencia principal entre un grupo de trabajo y un equipo de alto rendimiento?", options: [ { id: "A", text: "No existe diferencia significativa." }, { id: "B", text: "El equipo trabaja de manera individual y autónoma." }, { id: "C", text: "El grupo se caracteriza por la competencia interna permanente." }, { id: "D", text: "El equipo desarrolla sinergia, responsabilidad compartida y complementariedad de habilidades." } ] },
+            { id: 9, text: "¿Cuál es la finalidad de utilizar los mensajes en primera persona (“Mensajes Yo”) durante un conflicto?", options: [ { id: "A", text: "Señalar los errores de la otra persona." }, { id: "B", text: "Expresar sentimientos y necesidades sin acusar ni descalificar." }, { id: "C", text: "Demostrar quién tiene la razón." }, { id: "D", text: "Evitar responsabilizarse de las propias emociones." } ] },
+            { id: 10, text: "¿Cuándo resulta recomendable la intervención de un mediador en un conflicto?", options: [ { id: "A", text: "Cuando existe cualquier desacuerdo menor." }, { id: "B", text: "Cuando una parte desea imponer una sanción." }, { id: "C", text: "Cuando las partes han llegado a un punto de bloqueo y la comunicación directa se ha deteriorado." }, { id: "D", text: "Cuando el mediador puede decidir quién tiene la razón." } ] }
+        ];
+
+        const STORAGE_KEY = 'eval_3ra_session_v2';
+        const EXAM_DURATION_SECONDS = 10 * 60;
+
+        let state = {
+            status: 'start',
+            studentName: '',
+            studentId: '',
+            sessionToken: '',
+            currentQuestion: 0,
+            answers: {},
+            warnings: 0,
+            timeRemaining: EXAM_DURATION_SECONDS,
+            terminationReason: null,
+            serverResult: null
+        };
+
+        let timerInterval = null;
+        let teacherRecordsCache = [];
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.status === 'playing' && parsed.sessionToken) {
+                        state = parsed;
+                    } else {
+                        localStorage.removeItem(STORAGE_KEY);
+                    }
+                } catch (e) {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+        }
+
+        function saveState() {
+            if (state.status === 'playing') {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+        }
+
+        // Bloqueo de atajos de copia e inspección básica
+        document.addEventListener('copy', (e) => e.preventDefault());
+        document.addEventListener('paste', (e) => e.preventDefault());
+        document.addEventListener('cut', (e) => e.preventDefault());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+                e.preventDefault();
+            }
+        });
+
+        // Sistema anti-abandono (3ra salida finaliza automáticamente)
+        function registerCheatWarning() {
+            if (state.status !== 'playing') return;
+            if (!document.getElementById('warning-modal').classList.contains('hidden')) return;
+
+            state.warnings += 1;
+            saveState();
+
+            if (state.warnings <= 2) {
+                document.getElementById('warning-count-text').textContent = state.warnings;
+                document.getElementById('warning-modal').classList.remove('hidden');
+            } else {
+                state.terminationReason = 'Terminada por 3ra salida de pantalla';
+                submitExam(true);
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => { if (document.hidden) registerCheatWarning(); });
+        window.addEventListener('blur', () => { registerCheatWarning(); });
+        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) registerCheatWarning(); });
+
+        async function resumeExam() {
+            document.getElementById('warning-modal').classList.add('hidden');
+            try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (err) {}
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('header-timer').classList.remove('hidden');
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+                saveState();
+                if (state.timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    state.terminationReason = 'Tiempo Agotado';
+                    submitExam(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(Math.max(0, state.timeRemaining) / 60);
+            const seconds = Math.max(0, state.timeRemaining) % 60;
+            document.getElementById('timer-display').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (state.timeRemaining < 120) {
+                document.getElementById('header-timer').classList.add('border-red-500', 'text-red-400');
+            }
+        }
+
+        function checkStartButton() {
+            const select = document.getElementById('student-select');
+            const input = document.getElementById('student-id-input');
+            document.getElementById('btn-start').disabled = !select.value || !input.value.trim();
+        }
+
+        async function startExam() {
+            const select = document.getElementById('student-select');
+            const input = document.getElementById('student-id-input');
+            const errorMsg = document.getElementById('login-error');
+            const btnStart = document.getElementById('btn-start');
+
+            const nombre = select.value;
+            const boleta = input.value.trim();
+
+            btnStart.disabled = true;
+            btnStart.textContent = "Validando credenciales en el servidor...";
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'start', nombre: nombre, boleta: boleta })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    errorMsg.textContent = data.message || "Error al validar boleta.";
+                    errorMsg.classList.remove('hidden');
+                    btnStart.disabled = false;
+                    btnStart.textContent = "Iniciar Evaluación";
+                    return;
+                }
+
+                state.studentName = nombre;
+                state.studentId = boleta;
+                state.sessionToken = data.token;
+                state.timeRemaining = data.durationSeconds || EXAM_DURATION_SECONDS;
+                state.status = 'playing';
+                saveState();
+
+                try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (e) {}
+                render();
+            } catch (err) {
+                errorMsg.textContent = "No se pudo conectar con el servidor. Verifica tu conexión o la URL configurada.";
+                errorMsg.classList.remove('hidden');
+                btnStart.disabled = false;
+                btnStart.textContent = "Iniciar Evaluación";
+            }
+        }
+
+        function selectAnswer(qId, optId) {
+            state.answers[qId] = optId;
+            saveState();
+            setTimeout(render, 120);
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestion > 0) { state.currentQuestion--; saveState(); render(); }
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestion < QUESTIONS.length - 1) { state.currentQuestion++; saveState(); render(); }
+        }
+
+        function confirmSubmit() {
+            const answered = Object.keys(state.answers).length;
+            if (answered < QUESTIONS.length) {
+                alert(`Has respondido ${answered} de ${QUESTIONS.length} preguntas. Debes contestar todas antes de enviar.`);
+                return;
+            }
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        async function submitExam(isForced = false) {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('warning-modal').classList.add('hidden');
+            if (timerInterval) clearInterval(timerInterval);
+
+            const container = document.getElementById('app-container');
+            container.innerHTML = `
+                <div class="max-w-md mx-auto mt-16 bg-white p-8 rounded-2xl shadow-xl text-center border-t-4 border-azul-inst">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-guinda mx-auto mb-4"></div>
+                    <h3 class="text-lg font-bold text-slate-900">Calificando evaluación en el servidor...</h3>
+                    <p class="text-sm text-slate-500 mt-2">Por favor no cierres esta ventana.</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'submit',
+                        token: state.sessionToken,
+                        boleta: state.studentId,
+                        answers: state.answers,
+                        reason: state.terminationReason || 'Normal'
+                    })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert("Aviso del servidor: " + data.message);
+                    localStorage.removeItem(STORAGE_KEY);
+                    state.status = 'start';
+                    render();
+                    return;
+                }
+
+                state.serverResult = data.result;
+                state.status = 'finished';
+                localStorage.removeItem(STORAGE_KEY);
+
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                render();
+            } catch (err) {
+                alert("Error de red al enviar respuestas. Intenta nuevamente.");
+            }
+        }
+
+        // Panel Docente autenticado en servidor
+        function openTeacherLogin() {
+            document.getElementById('teacher-password').value = '';
+            document.getElementById('teacher-error').classList.add('hidden');
+            document.getElementById('teacher-modal').classList.remove('hidden');
+        }
+
+        function closeTeacherLogin() {
+            document.getElementById('teacher-modal').classList.add('hidden');
+        }
+
+        async function verifyTeacherLogin() {
+            const pass = document.getElementById('teacher-password').value;
+            const btn = document.getElementById('btn-teacher-login');
+            const err = document.getElementById('teacher-error');
+
+            btn.disabled = true;
+            btn.textContent = "Verificando...";
+            err.classList.add('hidden');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'teacher', password: pass })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    teacherRecordsCache = data.records || [];
+                    closeTeacherLogin();
+                    state.status = 'teacher';
+                    render();
+                } else {
+                    err.textContent = data.message || "Contraseña incorrecta.";
+                    err.classList.remove('hidden');
+                }
+            } catch (e) {
+                err.textContent = "Error de conexión con el servidor.";
+                err.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Ingresar";
+            }
+        }
+
+        function exitTeacherMode() {
+            state.status = 'start';
+            render();
+        }
+
+        function downloadCSV() {
+            if (!teacherRecordsCache.length) {
+                alert("No hay resultados registrados aún.");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Boleta,Nombre,Calificacion,Correctas,Incorrectas,Sin Responder,Fecha,Motivo Cierre\n";
+            teacherRecordsCache.forEach(r => {
+                csvContent += `"${r.id}","${r.name}",${r.score},${r.correct},${r.incorrect},${r.unanswered},"${r.date}","${r.reason}"
+`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "Resultados_3ra_Evaluacion.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadPDF() {
+            const btn = document.getElementById('pdf-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generando PDF...';
+            btn.disabled = true;
+
+            const element = document.getElementById('pdf-content');
+            const originalClasses = element.className;
+            element.className = 'w-full max-w-4xl mx-auto bg-white p-8';
+
+            const opt = {
+                margin: 10,
+                filename: `Evaluacion_${state.serverResult.boleta}_${state.serverResult.nombre.replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    scrollY: 0,
+                    scrollX: 0
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                element.className = originalClasses;
+            });
+        }
+
+        function render() {
+            const container = document.getElementById('app-container');
+            container.innerHTML = '';
+
+            if (state.status === 'start') {
+                container.appendChild(createStartScreen());
+            } else if (state.status === 'playing') {
+                container.appendChild(createQuizScreen());
+                if (!timerInterval) startTimer();
+            } else if (state.status === 'finished') {
+                document.getElementById('header-timer').classList.add('hidden');
+                container.appendChild(createResultScreen());
+            } else if (state.status === 'teacher') {
+                document.getElementById('header-timer').classList.add('hidden');
+                container.appendChild(createTeacherDashboard());
+            }
+        }
+
+        function createStartScreen() {
+            const div = document.createElement('div');
+            div.className = 'w-full max-w-2xl mx-auto mt-6 bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-slate-200';
+
+            let optionsHTML = '<option value="" disabled selected>Seleccione su nombre completo...</option>';
+            STUDENT_NAMES.forEach(name => {
+                optionsHTML += `<option value="${name}">${name}</option>`;
+            });
+
+            div.innerHTML = `
+                <div class="bg-gradient-to-r from-slate-950 via-guinda to-azul-inst p-8 text-white text-center">
+                    <span class="inline-block bg-white/15 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Evaluación Oficial</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold mb-2">3ra Evaluación Departamental</h2>
+                    <p class="text-slate-200 text-sm">Liderazgo, Dinámica de Grupos y Manejo de Conflictos</p>
+                </div>
+                <div class="p-6 md:p-8">
+                    <div class="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-verde-inst"></span>
+                            Instrucciones Generales
+                        </h3>
+                        <ul class="text-slate-700 space-y-2 text-sm ml-4 list-disc">
+                            <li>La evaluación consta de <strong>10 preguntas</strong> de opción múltiple.</li>
+                            <li>Dispones de <strong>10 minutos</strong> controlados por el servidor para completarla.</li>
+                            <li><strong>Seguridad Anti-Abandono:</strong> Se activará pantalla completa. Si sales de la ventana o cambias de pestaña recibirás una advertencia. <strong class="text-guinda">A la tercera salida de pantalla, la evaluación finalizará automáticamente.</strong></li>
+                        </ul>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Nombre del Estudiante</label>
+                        <select id="student-select" class="w-full border-slate-300 rounded-xl p-3 bg-white border cursor-pointer outline-none focus:border-azul-inst" onchange="checkStartButton()">
+                            ${optionsHTML}
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Número de Boleta</label>
+                        <input type="text" id="student-id-input" placeholder="Ingrese su número de boleta" class="w-full border-slate-300 rounded-xl p-3 bg-white border outline-none focus:border-azul-inst" oninput="checkStartButton()" autocomplete="off">
+                        <p id="login-error" class="text-guinda text-sm mt-2 hidden font-semibold"></p>
+                    </div>
+                    <button id="btn-start" disabled class="w-full bg-azul-inst hover-bg-azul-inst disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all" onclick="startExam()">
+                        Iniciar Evaluación
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        function createQuizScreen() {
+            const div = document.createElement('div');
+            div.className = 'w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col fade-in border border-slate-200 max-w-4xl mx-auto';
+            const q = QUESTIONS[state.currentQuestion];
+            const progress = ((state.currentQuestion + 1) / QUESTIONS.length) * 100;
+            const answeredCount = Object.keys(state.answers).length;
+
+            let optionsHTML = '';
+            q.options.forEach(opt => {
+                const isSelected = state.answers[q.id] === opt.id;
+                optionsHTML += `
+                    <label class="option-card block relative cursor-pointer">
+                        <input type="radio" name="question_${q.id}" value="${opt.id}" class="sr-only" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${q.id}, '${opt.id}')">
+                        <div class="p-4 md:p-5 rounded-xl border-2 transition-all flex items-start gap-4 ${isSelected ? 'border-azul-inst bg-blue-50' : 'border-slate-200 hover:border-slate-400 hover:bg-slate-50'}">
+                            <div class="radio-circle flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 ${isSelected ? 'border-azul-inst bg-azul-inst' : 'border-slate-400'}"></div>
+                            <span class="text-slate-800 font-medium leading-relaxed">${opt.id}) ${opt.text}</span>
+                        </div>
+                    </label>
+                `;
+            });
+
+            div.innerHTML = `
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <div class="flex justify-between text-xs md:text-sm font-bold text-slate-600 mb-2">
+                        <span>Pregunta ${state.currentQuestion + 1} de ${QUESTIONS.length}</span>
+                        <span class="text-verde-inst">${answeredCount} de ${QUESTIONS.length} respondidas</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5">
+                        <div class="bg-gradient-to-r from-guinda via-azul-inst to-verde-inst h-2.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                    </div>
+                </div>
+                <div class="p-6 md:p-8 flex-grow">
+                    <h2 class="text-lg md:text-xl font-bold text-slate-900 mb-6 leading-snug">
+                        ${state.currentQuestion + 1}. ${q.text}
+                    </h2>
+                    <div class="space-y-3.5">${optionsHTML}</div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center">
+                    <button onclick="prevQuestion()" class="px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 disabled:opacity-40" ${state.currentQuestion === 0 ? 'disabled' : ''}>
+                        ← Anterior
+                    </button>
+                    ${state.currentQuestion === QUESTIONS.length - 1
+                        ? `<button onclick="confirmSubmit()" class="px-7 py-2.5 rounded-xl font-bold text-white bg-verde-inst hover-bg-verde-inst shadow-md">Finalizar Evaluación ✓</button>`
+                        : `<button onclick="nextQuestion()" class="px-6 py-2.5 rounded-xl font-bold text-white bg-azul-inst hover-bg-azul-inst shadow-md">Siguiente →</button>`
+                    }
+                </div>
+            `;
+            return div;
+        }
+
+        function createResultScreen() {
+            const r = state.serverResult;
+            const aprobado = r.calificacion >= 6.0;
+
+            let gridHTML = '';
+            r.breakdown.forEach(item => {
+                let cardStyle = 'bg-slate-100 text-slate-700 border-slate-300';
+                let icon = '➖';
+                if (item.status === 'Correcta') {
+                    cardStyle = 'bg-emerald-50 text-verde-inst border-emerald-300';
+                    icon = '✅';
+                } else if (item.status === 'Incorrecta') {
+                    cardStyle = 'bg-rose-50 text-guinda border-rose-300';
+                    icon = '❌';
+                }
+                gridHTML += `
+                    <div class="${cardStyle} border rounded-xl p-3 text-center" style="page-break-inside: avoid;">
+                        <div class="text-xs font-bold uppercase text-slate-500 mb-1">Preg. ${item.question}</div>
+                        <div class="text-lg mb-1">${icon}</div>
+                        <div class="text-xs font-bold">${item.status}</div>
+                    </div>
+                `;
+            });
+
+            const div = document.createElement('div');
+            div.className = 'w-full max-w-4xl mx-auto flex flex-col gap-6 fade-in';
+            div.innerHTML = `
+                <div id="pdf-content" class="w-full bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-200">
+                    <div class="text-center mb-6 border-b-2 border-guinda pb-5">
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-950">Comprobante Oficial de Resultados</h2>
+                        <p class="text-sm text-slate-600 mt-1">3ra Evaluación Departamental • M. en E. Edgar Maldonado Mosqueda</p>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-xl p-5 mb-6 border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase font-bold">Estudiante</p>
+                            <p class="text-lg font-bold text-slate-900">${r.nombre}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase font-bold">Boleta</p>
+                            <p class="text-lg font-mono font-bold text-azul-inst">${r.boleta}</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8" style="page-break-inside: avoid;">
+                        <div class="mx-auto w-44 h-44 rounded-full border-8 ${aprobado ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'} flex flex-col items-center justify-center mb-4">
+                            <span class="text-xs font-bold uppercase tracking-widest text-slate-600 block mb-1">Calificación</span>
+                            <span class="text-5xl font-black ${aprobado ? 'text-verde-inst' : 'text-guinda'} leading-none block">${r.calificacion}</span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold ${aprobado ? 'text-verde-inst' : 'text-guinda'} mb-1">
+                            ${aprobado ? '✅ APROBADO' : '❌ NO APROBADO'}
+                        </h3>
+                        <p class="text-slate-600 text-sm max-w-md mx-auto">
+                            ${aprobado ? 'Felicidades. Has acreditado satisfactoriamente la evaluación.' : 'No alcanzaste la calificación mínima aprobatoria. Te recomendamos reforzar los contenidos evaluados.'}
+                        </p>
+                        ${r.reason !== 'Normal' ? `<div class="mt-3 inline-block px-4 py-1.5 bg-amber-100 text-amber-900 rounded-lg text-xs font-bold border border-amber-300">Motivo de cierre: ${r.reason}</div>` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8" style="page-break-inside: avoid;">
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-center">
+                            <div class="text-2xl font-black text-azul-inst">${r.total}</div>
+                            <div class="text-xs font-bold text-slate-700 uppercase">Total</div>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center">
+                            <div class="text-2xl font-black text-verde-inst">${r.correctas}</div>
+                            <div class="text-xs font-bold text-slate-700 uppercase">Correctas</div>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center">
+                            <div class="text-2xl font-black text-guinda">${r.incorrectas}</div>
+                            <div class="text-xs font-bold text-slate-700 uppercase">Incorrectas</div>
+                        </div>
+                        <div class="bg-slate-100 border border-slate-300 p-4 rounded-xl text-center">
+                            <div class="text-2xl font-black text-slate-800">${r.sinResponder}</div>
+                            <div class="text-xs font-bold text-slate-700 uppercase">Sin Responder</div>
+                        </div>
+                    </div>
+
+                    <h4 class="text-base font-bold text-slate-900 mb-3 border-b border-slate-200 pb-2">Desglose por Reactivo</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">${gridHTML}</div>
+                </div>
+
+                <div class="flex justify-center mb-6" data-html2canvas-ignore="true">
+                    <button id="pdf-btn" onclick="downloadPDF()" class="bg-azul-inst hover-bg-azul-inst text-white font-bold py-3.5 px-8 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5">
+                        Descargar Comprobante PDF
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        function createTeacherDashboard() {
+            const div = document.createElement('div');
+            div.className = 'w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-200 fade-in';
+
+            let rows = '';
+            if (!teacherRecordsCache.length) {
+                rows = '<tr><td colspan="6" class="text-center py-8 text-slate-500 italic">No hay evaluaciones registradas en Google Sheets aún.</td></tr>';
+            } else {
+                teacherRecordsCache.forEach(r => {
+                    const badge = Number(r.score) >= 6.0
+                        ? '<span class="bg-emerald-100 text-verde-inst text-xs font-bold px-2.5 py-1 rounded-full">Aprobado</span>'
+                        : '<span class="bg-rose-100 text-guinda text-xs font-bold px-2.5 py-1 rounded-full">No Aprobado</span>';
+                    rows += `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="py-3 px-4 text-sm font-mono font-bold text-slate-900">${r.id}</td>
+                            <td class="py-3 px-4 text-sm text-slate-800">${r.name}</td>
+                            <td class="py-3 px-4 text-sm font-extrabold text-center text-azul-inst">${r.score}</td>
+                            <td class="py-3 px-4 text-sm text-center">${badge}</td>
+                            <td class="py-3 px-4 text-xs text-slate-600">${r.reason}</td>
+                            <td class="py-3 px-4 text-xs text-slate-500 text-right">${r.date}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            div.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-slate-200 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-950">Concentrado General (Servidor)</h2>
+                        <p class="text-xs text-slate-500">Registros sincronizados en tiempo real desde Google Sheets</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="downloadCSV()" class="px-4 py-2 bg-verde-inst hover-bg-verde-inst text-white rounded-xl text-sm font-bold">Exportar Excel (.csv)</button>
+                        <button onclick="exitTeacherMode()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-xl text-sm font-bold">Cerrar Panel</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-white text-xs uppercase">
+                                <th class="py-3 px-4">Boleta</th>
+                                <th class="py-3 px-4">Estudiante</th>
+                                <th class="py-3 px-4 text-center">Calif.</th>
+                                <th class="py-3 px-4 text-center">Estado</th>
+                                <th class="py-3 px-4">Cierre</th>
+                                <th class="py-3 px-4 text-right">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+            return div;
+        }
+
+        loadState();
+        render();
+    </script>
+</body>
+</html>
